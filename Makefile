@@ -1,9 +1,5 @@
-SRC = $(shell find src/ -name "*.rs")
-
-IMAGE = am-hal
-
-$(IMAGE).txt : $(SRC)
+build:
 	@cargo build
-	@cargo objdump -- -d > $(IMAGE).txt
 
-run: $(IMAGE).txt
+disasm: build
+	@cargo objdump -- -d > disasm.txt

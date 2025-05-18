@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "am-hal"
+name = "std"
 version = "0.1.0"
