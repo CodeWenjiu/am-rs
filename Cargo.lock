@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
-name = "std"
+name = "dummy"
+version = "0.1.0"
+dependencies = [
+ "riscv32i_runtime",
+]
+
+[[package]]
+name = "riscv32i_runtime"
 version = "0.1.0"

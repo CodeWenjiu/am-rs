@@ -5,15 +5,11 @@ MEMORY {
 }
 
 /* The entry point is the reset handler */
-ENTRY(__start__);
-
-PHDRS { text PT_LOAD; data PT_LOAD; }
+ENTRY(__start__)
 
 SECTIONS {
-  . = ORIGIN(MEM);
-
-  .text :
-  {
-    *(.text .text.*);
+  .text ORIGIN(MEM) : {
+    *(.reset_vector)
+    *(.text .text.*)
   } > MEM
 }
