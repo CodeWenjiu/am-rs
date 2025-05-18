@@ -1,0 +1,12 @@
+
+am-hal:	file format elf32-littleriscv
+
+Disassembly of section .text:
+
+80000000 <__start__>:
+80000000: 00000097     	auipc	ra, 0x0
+80000004: 008080e7     	jalr	0x8(ra) <am_hal::main::h708f13d73d197497>
+
+80000008 <am_hal::main::h708f13d73d197497>:
+80000008: 0040006f     	j	0x8000000c <am_hal::main::h708f13d73d197497+0x4>
+8000000c: 0000006f     	j	0x8000000c <am_hal::main::h708f13d73d197497+0x4>
