@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use riscv32i_runtime::entry;
+use nemu_runtime::entry;
 
 entry!(main);
 

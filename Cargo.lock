@@ -6,9 +6,9 @@ version = 4
 name = "dummy"
 version = "0.1.0"
 dependencies = [
- "riscv32i_runtime",
+ "nemu_runtime",
 ]
 
 [[package]]
-name = "riscv32i_runtime"
+name = "nemu_runtime"
 version = "0.1.0"
