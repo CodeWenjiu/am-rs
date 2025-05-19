@@ -1,2 +1,0 @@
-[target.riscv32i-unknown-none-elf]
-rustflags = ["-C", "link-arg=-Tplatform/nemu/link.x"]

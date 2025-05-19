@@ -20,16 +20,23 @@ endif
 
 endif
 
+BIN ?= dummy
+
+BUILD_ARGS = --bin $(BIN) --target $(ISA)
+BUILD_DIRS = build/$(PLATFORM)/$(BIN)
+
 default: build
 
 build:
-	@cargo --config $(CONFIG) build --target $(ISA)
+	@cargo  build $(BUILD_ARGS) --release
 
-disasm: build
-	@cargo --config $(CONFIG) objdump --target $(ISA) -- -d
+disasm:
+	@mkdir -p $(BUILD_DIRS)
+	@cargo  objdump $(BUILD_ARGS) -- -d > $(BUILD_DIRS)/image.txt
+	@cargo  objcopy $(BUILD_ARGS) -- -O binary $(BUILD_DIRS)/image.bin
 
 clean:
 	@cargo clean
-	@rm disasm.txt
+	@rm -rf build/
 
 .PHONY: clean
