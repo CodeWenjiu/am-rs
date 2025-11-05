@@ -1,6 +1,6 @@
-#![no_std] // 无标准库
+#![no_std] 
 
-#[unsafe(no_mangle)] // 不进行变量/函数名修饰
+#[unsafe(no_mangle)] 
 #[unsafe(link_section = ".reset_vector")]
 pub unsafe extern "C" fn __start__() -> ! {
 
