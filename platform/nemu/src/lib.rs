@@ -29,3 +29,52 @@ macro_rules! entry {
         }
     }
 }
+
+// 串口输出实现
+// NEMU 的串口设备地址 (根据你的平台配置调整)
+const SERIAL_PORT: usize = 0xa00003f8;
+
+/// 输出单个字符到串口
+#[inline]
+pub fn putc(ch: u8) {
+    unsafe {
+        core::ptr::write_volatile(SERIAL_PORT as *mut u8, ch);
+    }
+}
+
+// 实现 core::fmt::Write trait
+use core::fmt::{self, Write};
+
+struct Writer;
+
+impl Write for Writer {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        for byte in s.bytes() {
+            putc(byte);
+        }
+        Ok(())
+    }
+}
+
+// 实现 print! 和 println! 宏
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    Writer.write_fmt(args).unwrap();
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        $crate::_print(format_args!($($arg)*))
+    };
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {
+        $crate::print!("\n")
+    };
+    ($($arg:tt)*) => {
+        $crate::print!("{}\n", format_args!($($arg)*))
+    };
+}
