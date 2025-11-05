@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use nemu_runtime::{print, println};
+use nemu_runtime::preclude::*;
 
 nemu_runtime::entry!(main);
 

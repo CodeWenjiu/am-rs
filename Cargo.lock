@@ -10,5 +10,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "macros"
+version = "0.1.0"
+
+[[package]]
 name = "nemu_runtime"
 version = "0.1.0"
+dependencies = [
+ "macros",
+]
