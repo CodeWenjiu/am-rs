@@ -40,6 +40,7 @@
             })
             
             cargo-binutils
+            cargo-edit
           ];
         };
       }

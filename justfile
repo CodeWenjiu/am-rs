@@ -20,20 +20,38 @@ _validate-arch arch:
 _get-target arch:
     '{{ARCH_TARGETS}}' | from json | get "{{arch}}"
 
-# Environment Initialization
-init:
-    @print "Initializing development environment..."
+# Bump env dependencies to latest versions
+bump-env:
+    @nix flake update
+
+# Environment ReInitialization
+Reinit:
+    @print "ReInitializing development environment..."
     @direnv allow .
+
+# Bump rust dependencies to latest versions
+bump-rs:
+    @cargo upgrade --incompatible
 
 # Build the project
 build arch=ARCH bin=BIN:
     @just _validate-arch {{arch}}
-    @nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; let target = ($arch_targets | get {{arch}}); print $"Building for architecture: {{arch}}, binary: {{bin}}, target: ($target)"; cargo build --bin {{bin}} --target $target --release'
+    @nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; \
+        let target = ($arch_targets | get {{arch}}); \
+        print $"Building for architecture: {{arch}}, binary: {{bin}}, target: ($target)"; \
+        cargo build --bin {{bin}} --target $target --release'
 
 # Generate disassembly and binary  
 disasm arch=ARCH bin=BIN:
     @just _validate-arch {{arch}}
-    @nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; let target = ($arch_targets | get {{arch}}); let platform = ("{{arch}}" | split row "-" | get 1); let build_dir = $"build/($platform)/{{bin}}"; print $"Generating disassembly for architecture: {{arch}}, binary: {{bin}}"; mkdir $build_dir; cargo objdump --bin {{bin}} --target $target -- -d | save --force $"($build_dir)/image.txt"; cargo objcopy --bin {{bin}} --target $target -- -O binary $"($build_dir)/image.bin"'
+    @nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; \
+        let target = ($arch_targets | get {{arch}}); \
+        let platform = ("{{arch}}" | split row "-" | get 1); \
+        let build_dir = $"build/($platform)/{{bin}}"; \
+        print $"Generating disassembly for architecture: {{arch}}, binary: {{bin}}"; \
+        mkdir $build_dir; \
+        cargo objdump --bin {{bin}} --target $target -- -d | save --force $"($build_dir)/image.txt"; \
+        cargo objcopy --bin {{bin}} --target $target -- -O binary $"($build_dir)/image.bin"'
 
 # Clean build artifacts
 clean:
