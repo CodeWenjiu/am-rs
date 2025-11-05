@@ -6,7 +6,6 @@ members = [
 ]
 
 [workspace.dependencies]
-build-target = "0.8.0"
 
 [profile.dev]
 panic = "abort"

@@ -1,9 +1,7 @@
 #![no_std]
 #![no_main]
 
-use nemu_runtime::entry;
-
-entry!(main);
+nemu_runtime::entry!(main);
 
 fn main() -> ! {
     loop {}
