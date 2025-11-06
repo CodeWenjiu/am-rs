@@ -9,7 +9,7 @@ ARCH := env_var_or_default("ARCH", "riscv32i-nemu")
 BIN := env_var_or_default("BIN", "dummy")
 
 # Default recipe
-default: 
+default:
     just --list
 
 # Validate architecture helper
@@ -42,15 +42,18 @@ build arch=ARCH bin=BIN:
         cargo build --bin {{bin}} --target $target --release \
     '
 
-# Generate disassembly and binary  
+# Generate disassembly and binary
 disasm arch=ARCH bin=BIN:
     @just _validate-arch {{arch}}
-    @nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; \
+    nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; \
         let target = ($arch_targets | get {{arch}}); \
-        let platform = ("{{arch}}" | split row "-" | get 1); \
-        let build_dir = $"build/($platform)/{{bin}}"; \
+        let parts = ("{{arch}}" | split row "-"); \
+        let isa = ($parts | get 0); \
+        let platform = ($parts | get 1); \
+        let build_dir = $"build/($platform)/($isa)/{{bin}}"; \
         print $"Generating disassembly for architecture: {{arch}}, binary: {{bin}}"; \
         mkdir $build_dir; \
+        print {{bin}} $target; \
         cargo objdump --bin {{bin}} --target $target --release -- -d | save --force $"($build_dir)/image.txt"; \
         cargo objcopy --bin {{bin}} --target $target --release -- -O binary $"($build_dir)/image.bin" \
     '
@@ -58,3 +61,4 @@ disasm arch=ARCH bin=BIN:
 # Clean build artifacts
 clean:
     @cargo clean
+    @rm -rf build

@@ -2,33 +2,38 @@ MEMORY {
   RAM : ORIGIN = 0x80000000, LENGTH = 0x08000000
 }
 
-ENTRY(__start__)
+ENTRY(_start)
 
 SECTIONS {
   . = ORIGIN(RAM);
 
-  .text :
-  {
-    *(.reset_vector)
+  .text : {
+    KEEP(*(.text._start))
+    KEEP(*(.text.__start__))
     *(.text .text.*)
   } > RAM
 
-  .rodata :
-  {
-    *(.rodata .rodata.*);
+  .rodata : {
+    *(.rodata .rodata.*)
   } > RAM
 
-  .bss :
-  {
-    _sbss = .;
-    *(.bss .bss.*);
-    _ebss = .;
+  .data : {
+    *(.data .data.*)
   } > RAM
 
-  .data :
-  {
-    _sdata = .;
-    *(.data .data.*);
-    _edata = .;
+  .bss : {
+    *(.bss .bss.*)
+    *(COMMON)
   } > RAM
+
+  . = ALIGN(4);
+  _sdata = ADDR(.data);
+  _edata = ADDR(.data) + SIZEOF(.data);
+  _sbss = ADDR(.bss);
+  _ebss = ADDR(.bss) + SIZEOF(.bss);
+
+  /DISCARD/ : {
+    *(.eh_frame)
+    *(.eh_frame_hdr)
+  }
 }

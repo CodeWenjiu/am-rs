@@ -4,14 +4,19 @@ pub mod preclude;
 
 macros::mod_flat!(stdio, critical_section, heap);
 
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".reset_vector")]
+#[unsafe(link_section = ".text.__start__")]
+#[unsafe(export_name = "__start__")]
 pub unsafe extern "C" fn __start__() -> ! {
     unsafe extern "Rust" {
         unsafe fn main() -> !;
     }
 
     unsafe { main() }
+}
+
+#[unsafe(export_name = "_start")]
+pub unsafe extern "C" fn _start() -> ! {
+    unsafe { __start__() }
 }
 
 #[cfg(not(test))]
