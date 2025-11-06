@@ -1,22 +1,23 @@
 #![no_std]
 
-pub mod preclude;
 mod critical_section;
+pub mod preclude;
 
 macros::mod_flat!(stdio);
 
-#[unsafe(no_mangle)] 
+#[unsafe(no_mangle)]
 #[unsafe(link_section = ".reset_vector")]
 pub unsafe extern "C" fn __start__() -> ! {
-
     unsafe extern "Rust" {
         unsafe fn main() -> !;
     }
 
-    unsafe {main()}
+    unsafe { main() }
 }
 
+#[cfg(not(test))]
 use core::panic::PanicInfo;
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
@@ -32,5 +33,5 @@ macro_rules! entry {
 
             f()
         }
-    }
+    };
 }
