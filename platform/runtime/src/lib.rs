@@ -10,9 +10,41 @@ impl Platform {
             Platform::Nemu => "nemu",
         }
     }
+
+    /// Parse platform from string (case-insensitive)
+    fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "nemu" => Some(Platform::Nemu),
+            _ => None,
+        }
+    }
 }
 
-pub fn link_helper(pla: Platform) {
+/// Get platform from environment variable or use the provided default
+fn get_platform() -> Platform {
+    if let Ok(platform_env) = env::var("PLATFORM") {
+        match Platform::from_str(&platform_env) {
+            Some(platform) => {
+                println!("cargo:trace=[build] platform={} (from env)", platform_env);
+                platform
+            }
+            None => {
+                panic!(
+                    "Invalid PLATFORM environment variable: '{}'\n\
+                     Valid values: nemu\n\
+                     Or unset PLATFORM to use the default.",
+                    platform_env
+                );
+            }
+        }
+    } else {
+        panic!("PLATFORM environment variable not set");
+    }
+}
+
+pub fn link_helper() {
+    // Get platform from environment variable or use default
+    let pla = get_platform();
     // Get the target triple
     let target = env::var("TARGET").expect("TARGET environment variable not set");
 
@@ -58,10 +90,14 @@ pub fn link_helper(pla: Platform) {
     println!("cargo:rerun-if-changed={}", linker_script.display());
     println!("cargo:rerun-if-changed=build.rs");
 
+    // Rerun if PLATFORM environment variable changes
+    println!("cargo:rerun-if-env-changed=PLATFORM");
+
     // Print info for debugging
     println!(
-        "cargo:info=Using linker script: {} for target: {}",
-        linker_script.display(),
-        target
+        "cargo:trace=[build] linker={} platform={} target={}",
+        linker_script_name,
+        pla.fmt(),
+        target_prefix
     );
 }
