@@ -1,9 +1,8 @@
 #![no_std]
 
-mod critical_section;
 pub mod preclude;
 
-macros::mod_flat!(stdio);
+macros::mod_flat!(stdio, critical_section, heap);
 
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".reset_vector")]
@@ -30,8 +29,20 @@ macro_rules! entry {
         pub unsafe fn __main() -> ! {
             // type check the given path
             let f: fn() -> ! = $path;
-            nemu_runtime::heap_init!();
+
+            $crate::heap_init!();
             f()
         }
+    };
+}
+
+#[macro_export]
+macro_rules! binInit {
+    [ ] => {
+        $crate::preclude!();
+
+        use embedded_alloc::LlffHeap;
+        #[global_allocator]
+        static ALLOCATOR: LlffHeap = LlffHeap::empty();
     };
 }
