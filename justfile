@@ -45,7 +45,7 @@ build arch=ARCH bin=BIN:
 # Generate disassembly and binary
 disasm arch=ARCH bin=BIN:
     @just _validate-arch {{arch}}
-    nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; \
+    @nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; \
         let target = ($arch_targets | get {{arch}}); \
         let parts = ("{{arch}}" | split row "-"); \
         let isa = ($parts | get 0); \
@@ -53,7 +53,6 @@ disasm arch=ARCH bin=BIN:
         let build_dir = $"build/($platform)/($isa)/{{bin}}"; \
         print $"Generating disassembly for architecture: {{arch}}, binary: {{bin}}"; \
         mkdir $build_dir; \
-        print {{bin}} $target; \
         cargo objdump --bin {{bin}} --target $target --release -- -d | save --force $"($build_dir)/image.txt"; \
         cargo objcopy --bin {{bin}} --target $target --release -- -O binary $"($build_dir)/image.bin" \
     '
