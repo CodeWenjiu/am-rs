@@ -7,7 +7,6 @@ nemu_runtime::entry!(main);
 
 fn main() -> ! {
     println!("Hello from Rust no_std!");
-    println!("Heap initialized successfully!");
 
     let mut v = Vec::new();
     v.push(1);

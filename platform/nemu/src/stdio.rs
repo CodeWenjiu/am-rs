@@ -1,4 +1,4 @@
-const SERIAL_PORT: usize = 0xa00003f8;
+const SERIAL_PORT: usize = 0x100003f8;
 
 #[inline]
 pub fn putc(ch: u8) {
