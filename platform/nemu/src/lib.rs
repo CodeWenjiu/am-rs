@@ -30,7 +30,7 @@ macro_rules! entry {
         pub unsafe fn __main() -> ! {
             // type check the given path
             let f: fn() -> ! = $path;
-
+            nemu_runtime::heap_init!();
             f()
         }
     };

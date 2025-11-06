@@ -7,7 +7,7 @@ ENTRY(__start__)
 SECTIONS {
   . = ORIGIN(RAM);
 
-  .text : 
+  .text :
   {
     *(.reset_vector)
     *(.text .text.*)
@@ -25,7 +25,7 @@ SECTIONS {
     _ebss = .;
   } > RAM
 
-  .data : 
+  .data :
   {
     _sdata = .;
     *(.data .data.*);
