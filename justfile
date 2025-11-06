@@ -39,7 +39,8 @@ build arch=ARCH bin=BIN:
     @nu -c 'let arch_targets = "{{ARCH_TARGETS}}" | from json; \
         let target = ($arch_targets | get {{arch}}); \
         print $"Building for architecture: {{arch}}, binary: {{bin}}, target: ($target)"; \
-        cargo build --bin {{bin}} --target $target --release'
+        cargo build --bin {{bin}} --target $target --release \
+    '
 
 # Generate disassembly and binary  
 disasm arch=ARCH bin=BIN:
@@ -50,8 +51,9 @@ disasm arch=ARCH bin=BIN:
         let build_dir = $"build/($platform)/{{bin}}"; \
         print $"Generating disassembly for architecture: {{arch}}, binary: {{bin}}"; \
         mkdir $build_dir; \
-        cargo objdump --bin {{bin}} --target $target -- -d | save --force $"($build_dir)/image.txt"; \
-        cargo objcopy --bin {{bin}} --target $target -- -O binary $"($build_dir)/image.bin"'
+        cargo objdump --bin {{bin}} --target $target --release -- -d | save --force $"($build_dir)/image.txt"; \
+        cargo objcopy --bin {{bin}} --target $target --release -- -O binary $"($build_dir)/image.bin" \
+    '
 
 # Clean build artifacts
 clean:

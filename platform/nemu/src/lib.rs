@@ -1,6 +1,7 @@
-#![no_std] 
+#![no_std]
 
 pub mod preclude;
+mod critical_section;
 
 macros::mod_flat!(stdio);
 

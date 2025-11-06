@@ -4,8 +4,12 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 authors = [ "wenjiu <27843087979@qq.com>" ]
+categories = ["embedded", "hardware-support", "no-std", "no-std::no-alloc"]
 
 [build-dependencies]
 
 [dependencies]
 macros = { path = "../../macros" }
+embedded-hal = { workspace = true }
+embedded-alloc = { workspace = true }
+critical-section = { version = "1.2", features = ["restore-state-none"] }
