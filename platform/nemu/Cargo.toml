@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 authors = [ "wenjiu <27843087979@qq.com>" ]
-categories = ["embedded", "hardware-support", "no-std", "no-std::no-alloc"]
 
 [build-dependencies]
 

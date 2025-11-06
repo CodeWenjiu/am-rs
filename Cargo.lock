@@ -33,6 +33,7 @@ dependencies = [
  "embedded-alloc",
  "embedded-hal",
  "nemu_runtime",
+ "runtime",
 ]
 
 [[package]]
@@ -107,6 +108,13 @@ dependencies = [
  "const-default",
  "libc",
  "svgbobdoc",
+]
+
+[[package]]
+name = "runtime"
+version = "0.1.0"
+dependencies = [
+ "macros",
 ]
 
 [[package]]
