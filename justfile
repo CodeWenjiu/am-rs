@@ -3,8 +3,8 @@ set shell := ["nu", "-c"]
 
 # Available architectures and their target mappings
 
-ARCHS := "riscv32i-nemu riscv32im-nemu"
-ARCH_TARGETS := '{"riscv32i-nemu": "riscv32i-unknown-none-elf", "riscv32im-nemu": "riscv32im-unknown-none-elf"}'
+ARCHS := "riscv32i-nemu riscv32im-nemu riscv32imv-nemu"
+ARCH_TARGETS := '{"riscv32i-nemu": "riscv32i-unknown-none-elf", "riscv32im-nemu": "riscv32im-unknown-none-elf", "riscv32imv-nemu": "riscv32im-unknown-none-elf"}'
 
 # Default values
 
@@ -49,6 +49,9 @@ build bin=BIN arch=ARCH:
         let parts = ("{{ arch }}" | split row "-"); \
         let platform = ($parts | get 1); \
         $env.PLATFORM = ($platform); \
+        if "{{ arch }}" == "riscv32imv-nemu" { \
+            $env.RUSTFLAGS = "-C target-feature=+v"; \
+        }; \
         cargo build --bin {{ bin }} --target $target --release \
     '
 
@@ -64,6 +67,9 @@ disasm bin=BIN arch=ARCH:
         let build_dir = $"build/($platform)/($isa)/{{ bin }}"; \
         print $"Generating disassembly for architecture: {{ arch }}, binary: {{ bin }}"; \
         mkdir $build_dir; \
+        if "{{ arch }}" == "riscv32imv-nemu" { \
+            $env.RUSTFLAGS = "-C target-feature=+v"; \
+        }; \
         cargo objdump --bin {{ bin }} --target $target --release -- -d | save --force $"($build_dir)/image.txt"; \
         cargo objcopy --bin {{ bin }} --target $target --release -- -O binary $"($build_dir)/image.bin" \
     '

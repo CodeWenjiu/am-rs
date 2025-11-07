@@ -11,9 +11,6 @@
 # # Linker script is now provided by build.rs
 
 [target.riscv32im-unknown-none-elf]
-rustflags = [
-    "-C", "target-feature=+v",  # 启用向量扩展 (V)
-]
 
 # [target.riscv32imc-unknown-none-elf]
 # # Linker script is now provided by build.rs
