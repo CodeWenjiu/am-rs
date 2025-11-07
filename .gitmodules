@@ -1,0 +1,3 @@
+[submodule "tools/llvm-project"]
+	path = tools/llvm-project
+	url = git@github.com:CodeWenjiu/llvm-project.git
