@@ -26,19 +26,18 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            (rust-bin.selectLatestNightlyWith (toolchain:
-              toolchain.default.override {
-                extensions = [
-                  "rust-src"
-                  "clippy"
-                  "rust-analyzer"
-                  "llvm-tools-preview"
-                ];
-                targets = [
-                  "riscv32i-unknown-none-elf"
-                  "riscv32im-unknown-none-elf"
-                ];
-              }))
+            (rust-bin.stable.latest.default.override {
+              extensions = [
+                "rust-src"
+                "clippy"
+                "rust-analyzer"
+                "llvm-tools-preview"
+              ];
+              targets = [
+                "riscv32i-unknown-none-elf"
+                "riscv32im-unknown-none-elf"
+              ];
+            })
             
             cargo-binutils
             cargo-edit
