@@ -1,10 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
+    "macros",
     "platform/nemu",
     "platform/runtime",
+    
     "bin/dummy",
-    "macros",
+    "bin/alloc",
 ]
 
 [workspace.dependencies]

@@ -41,7 +41,7 @@ bump-rs:
     @cargo upgrade --incompatible
 
 # Build the project
-build arch=ARCH bin=BIN:
+build bin=BIN arch=ARCH:
     @just _validate-arch {{ arch }}
     @nu -c 'let arch_targets = "{{ ARCH_TARGETS }}" | from json; \
         let target = ($arch_targets | get {{ arch }}); \
@@ -53,7 +53,7 @@ build arch=ARCH bin=BIN:
     '
 
 # Generate disassembly and binary
-disasm arch=ARCH bin=BIN:
+disasm bin=BIN arch=ARCH:
     @just _validate-arch {{ arch }}
     @nu -c 'let arch_targets = "{{ ARCH_TARGETS }}" | from json; \
         let target = ($arch_targets | get {{ arch }}); \
