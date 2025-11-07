@@ -1,3 +1,4 @@
+set windows-shell := ["nu", "-c"]
 set shell := ["nu", "-c"]
 
 # Available architectures and their target mappings
@@ -16,7 +17,11 @@ default:
 
 # Validate architecture helper
 _validate-arch arch:
-    @let archs = "{{ ARCHS }}" | split row " "; if not ($archs | any {|x| $x == "{{ arch }}"}) { print $"Error: Expected ARCH in ($archs), Got \"{{ arch }}\""; exit 1 }
+    @nu -c 'let archs = "{{ ARCHS }}" | split row " "; \
+    if not ($archs | any {|x| $x == "{{ arch }}"}) { \
+        print $"Error: Expected ARCH in ($archs), Got \"{{ arch }}\""; \
+        exit 1 \
+    }'
 
 # Get target for architecture
 _get-target arch:
