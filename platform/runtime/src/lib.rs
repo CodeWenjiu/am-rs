@@ -22,23 +22,20 @@ impl Platform {
 
 /// Get platform from environment variable or use the provided default
 fn get_platform() -> Platform {
-    if let Ok(platform_env) = env::var("PLATFORM") {
-        match Platform::from_str(&platform_env) {
-            Some(platform) => {
-                println!("cargo:trace=[build] platform={} (from env)", platform_env);
-                platform
-            }
-            None => {
-                panic!(
-                    "Invalid PLATFORM environment variable: '{}'\n\
-                     Valid values: nemu\n\
-                     Or unset PLATFORM to use the default.",
-                    platform_env
-                );
-            }
+    let arch = env::var("ARCH").expect("PLATFORM environment variable not set");
+    let platform_env = arch.split_once('-').expect("Invalid ARCH").1;
+    match Platform::from_str(&platform_env) {
+        Some(platform) => {
+            println!("cargo:trace=[build] platform={} (from env)", platform_env);
+            platform
         }
-    } else {
-        panic!("PLATFORM environment variable not set");
+        None => {
+            panic!(
+                "Invalid PLATFORM environment variable: '{}'\n\
+                    Valid values: nemu\n",
+                platform_env
+            );
+        }
     }
 }
 

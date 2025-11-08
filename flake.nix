@@ -38,7 +38,7 @@
                 "riscv32im-unknown-none-elf"
               ];
             })
-            
+
             cargo-binutils
             cargo-edit
           ];
