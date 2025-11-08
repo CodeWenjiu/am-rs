@@ -4,9 +4,11 @@ members = [
     "macros",
     "platform/nemu",
     "platform/runtime",
-    
+
     "bin/dummy",
+    "bin/hello_world",
     "bin/alloc",
+
     "bin/vector",
 ]
 

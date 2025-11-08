@@ -1,6 +1,6 @@
-export const ARCHS = ["riscv32i-nemu", "riscv32im-nemu", "riscv32imv-nemu"]
+const ARCHS = ["riscv32i-nemu", "riscv32im-nemu", "riscv32imv-nemu"]
 
-export const ARCH_TARGETS = {
+const ARCH_TARGETS = {
     "riscv32i-nemu": "riscv32i-unknown-none-elf",
     "riscv32im-nemu": "riscv32im-unknown-none-elf",
     "riscv32imv-nemu": "riscv32im-unknown-none-elf"
@@ -25,10 +25,6 @@ export def prepare_env [arch: string] {
     }
 
     return $env_vars
-}
-
-export def arch_spilit [arch: string] {
-    $arch | split row "-"
 }
 
 export def get_target [arch: string] {
