@@ -7,11 +7,11 @@ def main [bin, arch] {
     let parts = $arch | split row "-"
     let isa = ($parts | get 0)
     let platform = ($parts | get 1)
-    let build_dir = $"build/($platform)/($isa)/($bin)"
-    mkdir $build_dir
+    let disasm_dir = $"target/disasm/($platform)/($isa)/($bin)"
+    mkdir $disasm_dir
 
     print $"Generating disassembly for architecture: ($arch), binary: ($bin), target: ($target)"
 
-    cargo objdump --bin $bin --target $target --release -- -d | save --force $"($build_dir)/image.txt"
-    cargo objcopy --bin $bin --target $target --release -- -O binary $"($build_dir)/image.bin"
+    cargo objdump --bin $bin --target $target --release -- -d | save --force $"($disasm_dir)/image.txt"
+    cargo objcopy --bin $bin --target $target --release -- -O binary $"($disasm_dir)/image.bin"
 }
