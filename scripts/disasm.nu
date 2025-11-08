@@ -20,7 +20,7 @@ def disasm [bin?, arch?] {
 
 def disasm_all_arch [bin] {
     log debug $"Generating disassembly for ($bin) for all architectures: ($ARCHS)"
-    $ARCHS | each {|arch|
+    $ARCHS | par-each {|arch|
         disasm $bin $arch
     } | ignore
 }
@@ -30,7 +30,7 @@ def main [bin?, arch?] {
     match $bin {
         null => {
             log critical "disassembly for all binaries for all architectures"
-            get_allbin | each {|bin|
+            get_allbin | par-each {|bin|
                 disasm_all_arch $bin
             } | ignore
         }

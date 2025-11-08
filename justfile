@@ -20,13 +20,13 @@ Reinit:
 bump-rs:
     @cargo upgrade --incompatible
 
-# Get all the valid ARCH
-get_allarch:
-    @use scripts/ARCHS.nu get_allarch; get_allarch
+# List all the valid bin
+list_bins:
+    @nu scripts/helper.nu list-bins
 
-# Get all the valid bin
-get_allbin:
-    @use scripts/utils.nu get_allbin; get_allbin
+# List all the valid ARCH
+list_archs:
+    @nu scripts/helper.nu list-archs
 
 # Build the project
 build bin="" arch="":

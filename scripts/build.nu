@@ -12,32 +12,25 @@ def build [bin, arch] {
 }
 
 # Build a binary for all architectures
-export def "main build-all-arch" [bin: string] {
+def "main build-all-arch" [bin: string] {
     log info $"Building ($bin) for all architectures: ($ARCHS)"
-    $ARCHS | each {|arch|
+    $ARCHS | par-each {|arch|
         build $bin $arch
     } | ignore
 }
 
 # Build a specific binary for a specific architecture
-export def "main build-one" [bin: string, arch: string] {
+def "main build-one" [bin: string, arch: string] {
     build $bin $arch
 }
 
-# List all available binaries
-export def "main list-bins" [] {
-    let bins = (get_allbin)
-    log info "Available binaries:"
-    $bins | each {|b| print $"  - ($b)"}
-}
-
 # Build all binaries for all architectures (default)
-export def main [bin?: string, arch?: string] {
+def main [bin?: string, arch?: string] {
     log critical "Starting build process..."
     match $bin {
         null => {
             log critical "Building all binaries for all architectures"
-            get_allbin | each {|bin|
+            get_allbin | par-each {|bin|
                 main build-all-arch $bin
             } | ignore
         }

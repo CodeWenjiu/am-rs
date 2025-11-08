@@ -8,10 +8,6 @@ const ARCH_TARGETS = {
     "riscv32imv-nemu": "riscv32im-unknown-none-elf"
 }
 
-export def get_allarch [] {
-    print $ARCHS
-}
-
 export def validate_arch [arch: string] {
     if not ($arch in $ARCHS) {
         error make {
