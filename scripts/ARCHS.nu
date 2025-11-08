@@ -19,12 +19,16 @@ export def prepare_env [arch: string] {
 
     mut env_vars = {ARCH: $arch}
 
-    if $arch == "riscv32imv-nemu" {
+    if ($arch | split row "-" | get 0 | split row "riscv32" | get 1 | str contains "v") {
         print "FLAGS Prepared for RVV"
         $env_vars.RUSTFLAGS = "-C target-feature=+v"
     }
 
     return $env_vars
+}
+
+export def arch_spilit [arch: string] {
+    $arch | split row "-"
 }
 
 export def get_target [arch: string] {
