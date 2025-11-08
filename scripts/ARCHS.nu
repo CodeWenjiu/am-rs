@@ -1,3 +1,5 @@
+use std/log
+
 const ARCHS = ["riscv32i-nemu", "riscv32im-nemu", "riscv32imv-nemu"]
 
 const ARCH_TARGETS = {
@@ -20,7 +22,7 @@ export def prepare_env [arch: string] {
     mut env_vars = {ARCH: $arch}
 
     if ($arch | split row "-" | get 0 | split row "riscv32" | get 1 | str contains "v") {
-        print "FLAGS Prepared for RVV"
+        log warning "FLAGS Prepared for RVV"
         $env_vars.RUSTFLAGS = "-C target-feature=+v"
     }
 

@@ -1,25 +1,2 @@
-# # Cargo configuration for am-rs project
-
-# # Build configuration for RISC-V targets
-# # Linker scripts are now dynamically selected by build.rs based on target and PLATFORM env var
-
-# [build]
-# # Uncomment to set a default target
-# # target = "riscv32i-unknown-none-elf"
-
-# [target.riscv32i-unknown-none-elf]
-# # Linker script is now provided by build.rs
-
-[target.riscv32im-unknown-none-elf]
-
-# [target.riscv32imc-unknown-none-elf]
-# # Linker script is now provided by build.rs
-
-# [target.riscv32gc-unknown-none-elf]
-# # Linker script is now provided by build.rs
-
-# [target.riscv64gc-unknown-none-elf]
-# # Linker script is now provided by build.rs
-
-# [target.riscv64imac-unknown-none-elf]
-# # Linker script is now provided by build.rs
+[profile.release]
+lto = true

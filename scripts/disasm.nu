@@ -1,4 +1,5 @@
 source ./ARCHS.nu
+use std/log
 
 def main [bin, arch] {
     load-env (prepare_env $arch)
@@ -10,7 +11,7 @@ def main [bin, arch] {
     let disasm_dir = $"target/disasm/($platform)/($isa)/($bin)"
     mkdir $disasm_dir
 
-    print $"Generating disassembly for architecture: ($arch), binary: ($bin), target: ($target)"
+    log critical $"Generating disassembly for architecture: ($arch), binary: ($bin), target: ($target)"
 
     cargo objdump --bin $bin --target $target --release -- -d | save --force $"($disasm_dir)/image.txt"
     cargo objcopy --bin $bin --target $target --release -- -O binary $"($disasm_dir)/image.bin"
