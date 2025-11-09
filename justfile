@@ -12,7 +12,7 @@ bump-env:
     @nix flake update
 
 # Environment ReInitialization
-Reinit:
+reinit:
     @print "ReInitializing development environment..."
     @direnv allow .
 

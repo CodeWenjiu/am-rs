@@ -34,6 +34,7 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "embedded-alloc",
+ "macros",
 ]
 
 [[package]]
@@ -113,6 +114,17 @@ dependencies = [
  "embedded-alloc",
  "embedded-hal",
  "macros",
+]
+
+[[package]]
+name = "panic"
+version = "0.1.0"
+dependencies = [
+ "build-helper",
+ "embedded-alloc",
+ "embedded-hal",
+ "macros",
+ "runtime",
 ]
 
 [[package]]

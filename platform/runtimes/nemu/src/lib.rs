@@ -25,6 +25,7 @@ use core::panic::PanicInfo;
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
+    use crate::exit::platform_exit;
     println!("Panic: {}", info);
-    loop {}
+    platform_exit(1);
 }

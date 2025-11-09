@@ -11,6 +11,7 @@ members = [
 
     "bin/dummy",
     "bin/hello",
+    "bin/panic",
     "bin/alloc",
 
     "bin/vector",
