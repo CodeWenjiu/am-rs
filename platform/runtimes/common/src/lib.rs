@@ -63,7 +63,7 @@ macro_rules! preclude {
         use runtime::{print, println};
 
         // Import common alloc types
-        use alloc::{boxed::Box, string::String, vec::Vec};
+        use alloc::{boxed::Box, rc::Rc, string::String, vec::Vec};
     };
 }
 

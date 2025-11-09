@@ -36,6 +36,7 @@
               targets = [
                 "riscv32i-unknown-none-elf"
                 "riscv32im-unknown-none-elf"
+                "riscv32imac-unknown-none-elf"
               ];
             })
 

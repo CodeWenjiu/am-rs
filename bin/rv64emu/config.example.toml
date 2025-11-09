@@ -1,0 +1,103 @@
+# rv64emu Configuration Example
+# This file documents the available configuration options in src/main.rs
+# Copy relevant values to your build or modify src/main.rs directly
+
+[memory]
+# Size of emulated DRAM in bytes
+# Default: 8 MB (8 * 1024 * 1024)
+# Increase if your kernel/program needs more memory
+# Note: Limited by your platform's heap size
+size = 8388608  # 8 MB
+# Uncomment for larger memory:
+# size = 16777216  # 16 MB
+# size = 33554432  # 32 MB
+# size = 67108864  # 64 MB
+
+[cpu]
+# RISC-V ISA string
+# Options: rv64i, rv64im, rv64imac, rv64imacv (with vector extension)
+isa = "rv64imac"
+
+# MMU type for virtual memory
+# Options: "sv39" (39-bit), "sv48" (48-bit), "sv57" (57-bit)
+mmu_type = "sv39"
+
+# TLB (Translation Lookaside Buffer) size in entries
+# Larger values may improve performance for memory-intensive workloads
+tlb_size = 16
+
+# Instruction cache size in bytes
+# Set to 0 to disable caching
+icache_size = 0
+
+# Decode cache size in entries
+# Caches decoded instructions for faster re-execution
+decode_cache_size = 1536
+
+# Boot program counter - where execution starts
+# Standard RISC-V memory layout starts at 0x80000000
+boot_pc = 0x80000000
+
+# Hardware thread ID
+hart_id = 0
+
+# Enable supervisor mode
+# Required for running operating systems like Linux
+smode = true
+
+[devices.uart_16550a]
+# 16550A UART device (standard UART controller)
+# Base memory address
+address = 0x10000000
+# Address space size
+size = 0x1000
+
+[devices.sifive_uart]
+# SiFive UART device (SiFive-compatible UART)
+# Base memory address
+address = 0xC0000000
+# Address space size
+size = 0x1000
+
+[debug]
+# Print status every N instructions
+# Set to 0 to disable periodic status updates
+print_interval = 1000000
+
+# Enable verbose logging
+# verbose = true
+
+# Enable instruction tracing (if supported)
+# trace_instructions = false
+
+[kernel]
+# Path to kernel binary file (relative to project root)
+# Uncomment and modify to load your kernel
+# binary_path = "resources/linux.bin"
+
+# Alternative: Use a test program
+# binary_path = "resources/test.bin"
+
+# Binary format
+# Options: "raw" (default), "elf"
+# format = "raw"
+
+[optimization]
+# Suggestions for improving performance:
+# 1. Increase decode_cache_size for instruction-heavy workloads
+# 2. Enable icache_size for repeated instruction sequences
+# 3. Increase tlb_size for virtual memory intensive operations
+# 4. Use higher optimization level when building (--release)
+# 5. Reduce print_interval or set to 0 to minimize I/O overhead
+
+[notes]
+# This is a documentation file only. To apply these settings:
+# 1. Edit the constants in src/main.rs
+# 2. Modify src/bin_file.rs to load your kernel binary
+# 3. Rebuild the project with: just build rv64emu rv64 <platform>
+#
+# Memory Layout:
+#   0x80000000 - DRAM base (MEM_BASE)
+#   0x10000000 - 16550A UART
+#   0xC0000000 - SiFive UART
+#   (PLIC and CLINT addresses are managed by rv64emu internally)

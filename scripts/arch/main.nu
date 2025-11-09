@@ -27,13 +27,14 @@ use std/log
 # ============================================================================
 
 # All ISAs that are known to the build system
-const SUPPORTED_ISAS = ["riscv32i", "riscv32im", "riscv32imv"]
+const SUPPORTED_ISAS = ["riscv32i", "riscv32im", "riscv32imac", "riscv32imv"]
 
 # ISA to Rust target mapping rules
 # Note: Some ISAs may map to the same target with additional flags
 const ISA_TARGET_MAP = {
     "riscv32i": "riscv32i-unknown-none-elf",
     "riscv32im": "riscv32im-unknown-none-elf",
+    "riscv32imac": "riscv32imac-unknown-none-elf",
     "riscv32imv": "riscv32im-unknown-none-elf"  # V extension added via RUSTFLAGS
 }
 
@@ -54,7 +55,7 @@ const PLATFORM_CONFIGS = {
         description: "NEMU RISC-V Emulator"
     },
     qemu: {
-        supported_isas: ["riscv32i", "riscv32im", "riscv32imv"],
+        supported_isas: ["riscv32i", "riscv32im", "riscv32imac", "riscv32imv"],
         description: "QEMU System Emulator"
     }
     spike: {

@@ -1,0 +1,17 @@
+[package]
+name = "rv64emu"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = [ "wenjiu <27843087979@qq.com>" ]
+
+[build-dependencies]
+build-helper = { path = "../../platform/build-helper" }
+
+[dependencies]
+macros = { path = "../../macros" }
+runtime = { path = "../../platform/runtime" }
+embedded-hal = { workspace = true }
+embedded-alloc = { workspace = true }
+rv64emu = { version = "0.1.1", default-features = false, features = ["alloc"] }
+crossbeam-queue = { version = "0.3", default-features = false, features = ["alloc"] }

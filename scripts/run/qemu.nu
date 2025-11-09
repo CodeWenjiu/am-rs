@@ -11,6 +11,7 @@ export def qemu_run [bin, arch] {
     let qemu_cpu = match $isa {
         "riscv32i" => "rv32",
         "riscv32im" => "rv32",
+        "riscv32imac" => "rv32",
         "riscv32imv" => "rv32,v=true,vlen=128",
         _ => {
             log error $"Unknown ISA: ($isa)"
