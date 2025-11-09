@@ -41,6 +41,8 @@
 
             cargo-binutils
             cargo-edit
+
+            qemu
           ];
         };
       }
