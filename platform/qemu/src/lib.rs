@@ -2,6 +2,7 @@
 
 // Platform-specific modules
 pub mod critical_section;
+pub mod startup;
 pub mod stdio;
 
 // Re-export stdio items for convenience
@@ -9,11 +10,12 @@ pub use stdio::putc;
 
 // Re-export common runtime items from runtime-common
 pub use runtime_common::{
-    Stdout, binInit, entry, heap_init, platform_startup, preclude, print, println, stdout,
+    Stdout, binInit, common_startup, entry, heap_init, preclude, print, println, stdout,
 };
 
-// Generate startup code using runtime's macro
-platform_startup!();
+// Generate common startup code
+// Platform-specific _start is in startup.rs
+common_startup!();
 
 // Platform-specific panic handler
 #[cfg(not(test))]

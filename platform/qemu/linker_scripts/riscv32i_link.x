@@ -37,6 +37,9 @@ SECTIONS {
   _sheap = .;
   _eheap = ORIGIN(RAM) + LENGTH(RAM) - 0x100000;  /* Reserve 1MB for stack */
 
+  /* Stack region - at the top of RAM */
+  _stack_top = ORIGIN(RAM) + LENGTH(RAM);
+
   /DISCARD/ : {
     *(.eh_frame)
     *(.eh_frame_hdr)
