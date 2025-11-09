@@ -45,6 +45,10 @@ export def get_target [arch: string] {
     ($ARCH_TARGETS | get $arch)
 }
 
+export def get_isa [arch: string] {
+    ($arch | split row "-" | get 0)
+}
+
 export def get_platform [arch: string] {
     # Extract platform from arch string (e.g., "riscv32i-nemu" -> "nemu")
     ($arch | split row "-" | get 1)

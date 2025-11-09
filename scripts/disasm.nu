@@ -2,14 +2,18 @@ source ./ARCHS.nu
 source ./utils.nu
 use std/log
 
+export def get_disasm_dir [bin, arch] {
+    let isa = get_isa $arch
+    let platform = get_platform $arch
+    $"target/disasm/($platform)/($isa)/($bin)"
+}
+
 def disasm [bin?, arch?] {
     load-env (prepare_env $arch)
     let target = get_target $arch
     let platform = get_platform $arch
 
-    let parts = $arch | split row "-"
-    let isa = ($parts | get 0)
-    let disasm_dir = $"target/disasm/($platform)/($isa)/($bin)"
+    let disasm_dir = get_disasm_dir $bin $arch
     mkdir $disasm_dir
 
     log info $"Generating disassembly for architecture: ($arch), binary: ($bin), target: ($target)"

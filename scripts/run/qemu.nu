@@ -1,33 +1,10 @@
-source ./ARCHS.nu
-source ./utils.nu
+source ../ARCHS.nu
+source ../utils.nu
 use std/log
 
-def main [bin, arch] {
-    load-env (prepare_env $arch)
-    let target = get_target $arch
+export def qemu_run [bin, arch] {
+    let isa = get_isa $arch
     let platform = get_platform $arch
-
-    # Only support QEMU platform
-    if $platform != "qemu" {
-        log error $"This script only supports QEMU platform, but got: ($platform)"
-        log error $"Please use an architecture with '-qemu' suffix"
-        return
-    }
-
-    let parts = $arch | split row "-"
-    let isa = ($parts | get 0)
-    let disasm_dir = $"target/disasm/($platform)/($isa)/($bin)"
-    let elf_file = $"($disasm_dir)/image.elf"
-
-    # Check if the ELF file exists
-    if not ($elf_file | path exists) {
-        log error $"ELF file not found: ($elf_file)"
-        log error "Please run 'just disasm' first to generate the image"
-        return
-    }
-
-    log info $"Running ($bin) on QEMU for architecture: ($arch)"
-    log info $"ELF file: ($elf_file)"
 
     # Determine QEMU machine and CPU based on ISA
     let qemu_machine = "virt"
@@ -57,10 +34,11 @@ def main [bin, arch] {
         "-nographic"
         "-serial" "mon:stdio"
         "-bios" "none"
-        "-kernel" $elf_file
+        "-kernel" $bin
     ]
 
     log info $"QEMU command: (($qemu_cmd | str join ' '))"
+    log info $"Press 'Ctrl+A X' to exit QEMU"
     log info "----------------------------------------"
 
     # Run QEMU

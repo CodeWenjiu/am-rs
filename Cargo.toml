@@ -10,7 +10,7 @@ members = [
     "platform/runtimes/qemu",
 
     "bin/dummy",
-    "bin/hello_world",
+    "bin/hello",
     "bin/alloc",
 
     "bin/vector",

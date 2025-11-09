@@ -37,8 +37,8 @@ disasm bin="" arch="":
     @nu scripts/disasm.nu {{ bin }} {{ arch }}
 
 # Run the program in QEMU
-run bin arch:
-    @nu scripts/run.nu {{ bin }} {{ arch }}
+run bin arch: (disasm bin arch)
+    @nu scripts/run/main.nu {{ bin }} {{ arch }}
 
 # Clean build artifacts
 clean:
