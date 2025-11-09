@@ -2,7 +2,10 @@
 resolver = "2"
 members = [
     "macros",
+
+    "platform/build-helper",
     "platform/nemu",
+    "platform/qemu",
     "platform/runtime",
 
     "bin/dummy",

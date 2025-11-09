@@ -1,3 +1,3 @@
 fn main() {
-    runtime::link_helper();
+    build_helper::link_helper();
 }

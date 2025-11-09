@@ -1,4 +1,4 @@
 {
-    "rust-analyzer.check.allTargets": false,
-    // "rust-analyzer.diagnostics.disabled": [ "unresolved-extern-crate" ]
+  "rust-analyzer.check.allTargets": false
+  // "rust-analyzer.diagnostics.disabled": [ "unresolved-extern-crate" ]
 }

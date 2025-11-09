@@ -1,11 +1,23 @@
 use std/log
 
-const ARCHS = ["riscv32i-nemu", "riscv32im-nemu", "riscv32imv-nemu"]
+const ARCHS = [
+    "riscv32i-nemu",
+    "riscv32im-nemu",
+    "riscv32imv-nemu",
+
+    "riscv32i-qemu",
+    "riscv32im-qemu",
+    "riscv32imv-qemu"
+]
 
 const ARCH_TARGETS = {
     "riscv32i-nemu": "riscv32i-unknown-none-elf",
     "riscv32im-nemu": "riscv32im-unknown-none-elf",
-    "riscv32imv-nemu": "riscv32im-unknown-none-elf"
+    "riscv32imv-nemu": "riscv32im-unknown-none-elf",
+
+    "riscv32i-qemu": "riscv32i-unknown-none-elf",
+    "riscv32im-qemu": "riscv32im-unknown-none-elf",
+    "riscv32imv-qemu": "riscv32im-unknown-none-elf"
 }
 
 export def validate_arch [arch: string] {
@@ -31,4 +43,9 @@ export def prepare_env [arch: string] {
 
 export def get_target [arch: string] {
     ($ARCH_TARGETS | get $arch)
+}
+
+export def get_platform [arch: string] {
+    # Extract platform from arch string (e.g., "riscv32i-nemu" -> "nemu")
+    ($arch | split row "-" | get 1)
 }

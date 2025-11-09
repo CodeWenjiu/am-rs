@@ -1,0 +1,10 @@
+[package]
+name = "build-helper"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = [ "wenjiu <27843087979@qq.com>" ]
+
+[lib]
+# This crate is only used at build time
+# It doesn't need to be compiled as a runtime library

@@ -1,9 +1,9 @@
 #![no_std]
 #![no_main]
 
-nemu_runtime::binInit!();
+runtime::binInit!();
 
-nemu_runtime::entry!(main);
+runtime::entry!(main);
 
 fn main() -> ! {
     loop {}

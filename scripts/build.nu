@@ -5,10 +5,13 @@ use std/log
 def build [bin, arch] {
     load-env (prepare_env $arch)
     let target = get_target $arch
+    let platform = get_platform $arch
 
     log info $"Building for architecture: ($arch), binary: ($bin), target: ($target)"
 
-    cargo build --bin $bin --target $target --release
+    # Build with the appropriate runtime feature based on platform
+    # Use --no-default-features to avoid conflict between default and specified features
+    cargo build --bin $bin --target $target --release --no-default-features --features $"runtime/($platform)"
 }
 
 # Build a binary for all architectures

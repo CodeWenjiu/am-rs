@@ -5,5 +5,17 @@ edition = "2024"
 license = "MIT"
 authors = [ "wenjiu <27843087979@qq.com>" ]
 
+[features]
+nemu = ["nemu_runtime"]
+qemu = ["qemu_runtime"]
+
 [dependencies]
 macros = { path = "../../macros" }
+
+# Optional runtime dependencies - only included when feature is enabled
+nemu_runtime = { path = "../nemu", optional = true }
+qemu_runtime = { path = "../qemu", optional = true }
+
+# Re-export common dependencies that all runtimes need
+embedded-hal = { workspace = true }
+embedded-alloc = { workspace = true }
