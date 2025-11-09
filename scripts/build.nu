@@ -1,4 +1,4 @@
-source ./ARCHS.nu
+source ./arch/utils.nu
 source ./utils.nu
 use std/log
 
@@ -16,8 +16,9 @@ def build [bin, arch] {
 
 # Build a binary for all architectures
 def "main build-all-arch" [bin: string] {
-    log info $"Building ($bin) for all architectures: ($ARCHS)"
-    $ARCHS | par-each {|arch|
+    let archs = get_all_archs
+    log info $"Building ($bin) for all architectures: ($archs)"
+    $archs | par-each {|arch|
         build $bin $arch
     } | ignore
 }

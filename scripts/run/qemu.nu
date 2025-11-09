@@ -1,4 +1,4 @@
-source ../ARCHS.nu
+source ../arch/main.nu
 source ../utils.nu
 use std/log
 

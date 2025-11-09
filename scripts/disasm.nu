@@ -1,4 +1,4 @@
-source ./ARCHS.nu
+source ./arch/utils.nu
 source ./utils.nu
 use std/log
 
@@ -24,8 +24,9 @@ def disasm [bin?, arch?] {
 }
 
 def disasm_all_arch [bin] {
-    log debug $"Generating disassembly for ($bin) for all architectures: ($ARCHS)"
-    $ARCHS | par-each {|arch|
+    let archs = get_all_archs
+    log debug $"Generating disassembly for ($bin) for all architectures: ($archs)"
+    $archs | par-each {|arch|
         disasm $bin $arch
     } | ignore
 }
