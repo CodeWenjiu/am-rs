@@ -5,13 +5,12 @@ pub mod critical_section;
 pub mod stdio;
 
 // Re-export stdio items for convenience
-pub use stdio::{Stdout, putc, stdout};
+pub use stdio::putc;
 
-// Note: print! and println! macros are automatically exported due to #[macro_export]
-
-// Import common runtime macros and startup code from runtime-common crate
-// These will be available when someone depends on qemu_runtime
-pub use runtime_common::{binInit, entry, heap_init, platform_startup, preclude};
+// Re-export common runtime items from runtime-common
+pub use runtime_common::{
+    Stdout, binInit, entry, heap_init, platform_startup, preclude, print, println, stdout,
+};
 
 // Generate startup code using runtime's macro
 platform_startup!();
