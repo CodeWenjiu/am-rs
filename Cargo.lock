@@ -30,6 +30,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "embedded-alloc",
+]
+
+[[package]]
 name = "const-default"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -101,11 +108,11 @@ version = "0.1.0"
 name = "nemu_runtime"
 version = "0.1.0"
 dependencies = [
+ "common",
  "critical-section",
  "embedded-alloc",
  "embedded-hal",
  "macros",
- "runtime-common",
 ]
 
 [[package]]
@@ -121,11 +128,11 @@ dependencies = [
 name = "qemu_runtime"
 version = "0.1.0"
 dependencies = [
+ "common",
  "critical-section",
  "embedded-alloc",
  "embedded-hal",
  "macros",
- "runtime-common",
 ]
 
 [[package]]
@@ -153,19 +160,12 @@ dependencies = [
 name = "runtime"
 version = "0.1.0"
 dependencies = [
+ "common",
  "embedded-alloc",
  "embedded-hal",
  "macros",
  "nemu_runtime",
  "qemu_runtime",
- "runtime-common",
-]
-
-[[package]]
-name = "runtime-common"
-version = "0.1.0"
-dependencies = [
- "embedded-alloc",
 ]
 
 [[package]]

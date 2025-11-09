@@ -98,6 +98,7 @@ pub fn link_helper() {
     // Path to the linker script in platform/<platform>/linker_scripts
     let linker_script = workspace_root
         .join("platform")
+        .join("runtimes")
         .join(platform.fmt())
         .join("linker_scripts")
         .join(&linker_script_name);

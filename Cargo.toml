@@ -4,10 +4,10 @@ members = [
     "macros",
 
     "platform/build-helper",
-    "platform/nemu",
-    "platform/qemu",
     "platform/runtime",
-    "platform/runtime-common",
+    "platform/runtimes/common",
+    "platform/runtimes/nemu",
+    "platform/runtimes/qemu",
 
     "bin/dummy",
     "bin/hello_world",

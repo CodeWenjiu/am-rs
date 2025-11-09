@@ -13,11 +13,11 @@ qemu = ["qemu_runtime"]
 macros = { path = "../../macros" }
 
 # Common runtime code shared by all platforms
-runtime-common = { path = "../runtime-common" }
+common = { path = "../runtimes/common" }
 
 # Optional runtime dependencies - only included when feature is enabled
-nemu_runtime = { path = "../nemu", optional = true }
-qemu_runtime = { path = "../qemu", optional = true }
+nemu_runtime = { path = "../runtimes/nemu", optional = true }
+qemu_runtime = { path = "../runtimes/qemu", optional = true }
 
 # Re-export common dependencies that all runtimes need
 embedded-hal = { workspace = true }

@@ -1,7 +1,7 @@
 #![no_std]
 
 // Re-export common runtime code for all platforms
-pub use runtime_common::*;
+pub use common::*;
 
 // ============================================================================
 // Platform Selection

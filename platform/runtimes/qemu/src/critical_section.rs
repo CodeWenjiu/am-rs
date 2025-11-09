@@ -1,5 +1,5 @@
 //! Critical section 实现
-//! 
+//!
 //! 为单核 bare-metal 系统提供临界区保护
 
 struct CriticalSection;

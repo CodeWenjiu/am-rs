@@ -10,7 +10,7 @@ pub mod stdio;
 pub use stdio::putc;
 
 // Re-export common runtime items from runtime-common
-pub use runtime_common::{
+pub use common::{
     Stdout, binInit, common_startup, entry, heap_init, preclude, print, println, stdout,
 };
 
