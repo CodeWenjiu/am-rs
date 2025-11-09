@@ -9,14 +9,20 @@
 /// For NEMU, we execute an ebreak instruction to halt the simulator.
 #[unsafe(no_mangle)]
 pub fn platform_exit(code: i32) -> ! {
+    // On RISC-V targets: place exit code in a0 then trap with ebreak (never returns)
+    #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]
     unsafe {
-        // Put exit code in a0 register before ebreak
-        // NEMU will read a0 to get the exit code
-        // Use out("a0") to directly place the value in a0 register
         core::arch::asm!(
             "ebreak",
             in("a0") code,
             options(noreturn)
         );
+    }
+
+    // On non-RISC-V targets: this function should never be called
+    #[cfg(not(any(target_arch = "riscv32", target_arch = "riscv64")))]
+    {
+        let _ = code;
+        unreachable!("WTF? platform_exit called on non-RISC-V target???");
     }
 }

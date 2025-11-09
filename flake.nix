@@ -43,6 +43,7 @@
             cargo-edit
 
             qemu
+            spike
           ];
         };
       }
