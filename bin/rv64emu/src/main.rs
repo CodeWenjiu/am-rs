@@ -169,13 +169,12 @@ fn main() {
             runtime::putc(c);
         }
 
-        // Note: In a real implementation with input, you would:
-        // 1. Check for incoming characters from the platform
-        // 2. Push them to uart_devices.rx_fifo
-        // Example:
-        // if let Some(input_char) = try_read_input() {
-        //     uart_devices.rx_fifo.push(input_char);
-        // }
+        // Handle UART input (console -> RX FIFO)
+        // Use try_getc to check for input without blocking
+        if let Some(input_char) = runtime::stdin().try_getc() {
+            // Push received character to emulated UART's RX FIFO
+            uart_devices.rx_fifo.push(input_char);
+        }
 
         // Check if simulation should stop (you can add conditions here)
         // For now, it runs indefinitely

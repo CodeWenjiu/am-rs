@@ -7,11 +7,12 @@ pub mod startup;
 pub mod stdio;
 
 // Re-export stdio items for convenience
-pub use stdio::putc;
+pub use stdio::{getc, putc, try_getc};
 
 // Re-export common runtime items from runtime-common
 pub use common::{
-    Stdout, binInit, common_startup, entry, heap_init, preclude, print, println, stdout,
+    Stdin, Stdout, binInit, common_startup, entry, heap_init, preclude, print, println, stdin,
+    stdout,
 };
 
 // Generate common startup code

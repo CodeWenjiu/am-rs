@@ -10,11 +10,14 @@ members = [
     "platform/runtimes/qemu",
     "platform/runtimes/spike",
 
-    # basic binary
+    # test binary
     "bin/dummy",
     "bin/hello",
     "bin/panic",
     "bin/alloc",
+
+    # basic binary
+    "bin/stdin",
 
     # simd test
     "bin/vector",

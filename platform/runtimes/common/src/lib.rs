@@ -7,6 +7,9 @@
 
 macros::mod_flat!(heap, stdio);
 
+// Re-export stdio types and functions
+pub use stdio::{Stdin, Stdout, stdin, stdout};
+
 /// Common binInit macro for all platforms
 ///
 /// This macro sets up the allocator and imports common preludes.
