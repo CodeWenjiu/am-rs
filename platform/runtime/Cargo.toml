@@ -8,6 +8,7 @@ authors = [ "wenjiu <27843087979@qq.com>" ]
 [features]
 nemu = ["nemu_runtime"]
 qemu = ["qemu_runtime"]
+spike = ["spike_runtime"]
 
 [dependencies]
 macros = { path = "../../macros" }
@@ -18,6 +19,7 @@ common = { path = "../runtimes/common" }
 # Optional runtime dependencies - only included when feature is enabled
 nemu_runtime = { path = "../runtimes/nemu", optional = true }
 qemu_runtime = { path = "../runtimes/qemu", optional = true }
+spike_runtime = { path = "../runtimes/spike", optional = true }
 
 # Re-export common dependencies that all runtimes need
 embedded-hal = { workspace = true }

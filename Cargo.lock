@@ -178,6 +178,18 @@ dependencies = [
  "macros",
  "nemu_runtime",
  "qemu_runtime",
+ "spike_runtime",
+]
+
+[[package]]
+name = "spike_runtime"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "critical-section",
+ "embedded-alloc",
+ "embedded-hal",
+ "macros",
 ]
 
 [[package]]

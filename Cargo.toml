@@ -8,6 +8,7 @@ members = [
     "platform/runtimes/common",
     "platform/runtimes/nemu",
     "platform/runtimes/qemu",
+    "platform/runtimes/spike",
 
     "bin/dummy",
     "bin/hello",

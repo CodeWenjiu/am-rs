@@ -19,6 +19,9 @@ pub use nemu_runtime::*;
 #[cfg(feature = "qemu")]
 pub use qemu_runtime::*;
 
+#[cfg(feature = "spike")]
+pub use spike_runtime::*;
+
 // Future platforms can be added here:
 // #[cfg(feature = "new_platform")]
 // pub use new_platform_runtime::*;

@@ -57,11 +57,10 @@ const PLATFORM_CONFIGS = {
         supported_isas: ["riscv32i", "riscv32im", "riscv32imv"],
         description: "QEMU System Emulator"
     }
-    # Example: To add a new platform, add an entry here:
-    # spike: {
-    #     supported_isas: ["riscv32i", "riscv32im"],  # No V extension
-    #     description: "Spike RISC-V ISA Simulator"
-    # }
+    spike: {
+        supported_isas: ["riscv32i", "riscv32im"],
+        description: "Spike RISC-V ISA Simulator"
+    }
 }
 
 # ============================================================================

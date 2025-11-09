@@ -1,0 +1,15 @@
+[package]
+name = "spike_runtime"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = [ "wenjiu <27843087979@qq.com>" ]
+
+[build-dependencies]
+
+[dependencies]
+macros = { path = "../../../macros" }
+common = { path = "../common" }
+embedded-hal = { workspace = true }
+embedded-alloc = { workspace = true }
+critical-section = { version = "1.2", features = ["restore-state-none"] }

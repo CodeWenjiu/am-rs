@@ -3,7 +3,7 @@ use std::env;
 fn main() {
     // List all supported platform features
     // To add a new platform: just add the platform name to this array
-    let platforms = ["nemu", "qemu"];
+    let platforms = ["nemu", "qemu", "spike"];
 
     // Check which platforms are enabled
     let enabled_platforms: Vec<&str> = platforms

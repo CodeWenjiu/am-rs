@@ -3,6 +3,7 @@ use std::{env, path::PathBuf};
 pub enum Platform {
     Nemu,
     Qemu,
+    Spike,
 }
 
 impl Platform {
@@ -10,6 +11,7 @@ impl Platform {
         match self {
             Platform::Nemu => "nemu",
             Platform::Qemu => "qemu",
+            Platform::Spike => "spike",
         }
     }
 
@@ -18,6 +20,7 @@ impl Platform {
         match s.to_lowercase().as_str() {
             "nemu" => Some(Platform::Nemu),
             "qemu" => Some(Platform::Qemu),
+            "spike" => Some(Platform::Spike),
             _ => None,
         }
     }
