@@ -14,6 +14,7 @@ def disasm [bin?, arch?] {
 
     log info $"Generating disassembly for architecture: ($arch), binary: ($bin), target: ($target)"
 
+    cp $"target/($target)/release/($bin)" $"($disasm_dir)/image.elf"
     cargo objdump --bin $bin --target $target --release -- -d | save --force $"($disasm_dir)/image.txt"
     cargo objcopy --bin $bin --target $target --release -- -O binary $"($disasm_dir)/image.bin"
 }
