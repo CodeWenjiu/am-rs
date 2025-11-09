@@ -1,43 +1,41 @@
-//! QEMU platform exit implementation
+//! Spike platform exit implementation
 //!
 //! This module provides the platform-specific exit function that is called
 //! when the user's main function returns.
 
-/// QEMU exit using SiFive Test Device
-///
-/// QEMU's virt machine provides a test device at 0x100000 that can be used
-/// to exit QEMU with a specific exit code.
-///
-/// Write 0x5555 to exit with success (exit code 0)
-/// Write 0x3333 to exit with failure (exit code 1)
-const QEMU_TEST_DEVICE: usize = 0x100000;
-const QEMU_EXIT_SUCCESS: u32 = 0x5555;
-const QEMU_EXIT_FAILURE: u32 = 0x3333;
+//! Spike exit via environment call (ecall)
+//!
+//! When running under the proxy kernel (pk) or an environment that interprets
+//! Linux-like syscalls, performing an ecall with a7 = 93 (SYS_exit) and a0 = code
+//! terminates the program and reports the exit status.
+//!
+//! If not on a RISC-V target (e.g. host-side analysis), we provide a dummy
+//! implementation that never returns but marks unreachable.
 
 /// Platform-specific exit function
 ///
 /// This function is called when the user's main function returns.
-/// For QEMU, we write to the test device to trigger a clean shutdown.
+/// For Spike, issue an `ecall` with a7 = 93 (exit) and a0 = exit code.
 ///
 /// # Arguments
 /// * `code` - Exit code (0 for success, non-zero for failure)
 #[unsafe(no_mangle)]
 pub fn platform_exit(code: i32) -> ! {
+    // RISC-V implementation: perform ecall SYS_exit (93)
+    #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]
     unsafe {
-        // Map exit code to QEMU test device value
-        // 0 -> 0x5555 (success), non-zero -> 0x3333 (failure)
-        let exit_value = if code == 0 {
-            QEMU_EXIT_SUCCESS
-        } else {
-            QEMU_EXIT_FAILURE
-        };
-
-        // Write to QEMU test device to trigger exit
-        core::ptr::write_volatile(QEMU_TEST_DEVICE as *mut u32, exit_value);
+        core::arch::asm!(
+            "ecall",
+            in("a0") code,     // exit status
+            in("a7") 93u32,    // SYS_exit (cast to avoid type inference issues)
+            options(noreturn)
+        );
     }
 
-    // If the test device write didn't work, fall back to infinite loop
-    loop {
-        core::hint::spin_loop();
+    // Non-RISC-V fallback (should never be invoked in correct builds)
+    #[cfg(not(any(target_arch = "riscv32", target_arch = "riscv64")))]
+    {
+        let _ = code;
+        unreachable!("platform_exit called on non-RISC-V target. WTF???");
     }
 }

@@ -44,6 +44,7 @@
 
             qemu
             spike
+            dtc
           ];
         };
       }

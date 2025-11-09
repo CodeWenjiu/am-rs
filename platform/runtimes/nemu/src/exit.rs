@@ -23,6 +23,6 @@ pub fn platform_exit(code: i32) -> ! {
     #[cfg(not(any(target_arch = "riscv32", target_arch = "riscv64")))]
     {
         let _ = code;
-        unreachable!("WTF? platform_exit called on non-RISC-V target???");
+        unreachable!("platform_exit called on non-RISC-V target. WTF???");
     }
 }

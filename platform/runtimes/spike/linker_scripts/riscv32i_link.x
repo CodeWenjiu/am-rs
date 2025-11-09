@@ -19,6 +19,12 @@ SECTIONS {
 
   .data : {
     *(.data .data.*)
+    . = ALIGN(8);
+    /* HTIF communication mailboxes for Spike */
+    tohost = .;
+    QUAD(0);
+    fromhost = .;
+    QUAD(0);
   } > RAM
 
   .bss : {
