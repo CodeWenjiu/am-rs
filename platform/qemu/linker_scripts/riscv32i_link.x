@@ -32,6 +32,11 @@ SECTIONS {
   _sbss = ADDR(.bss);
   _ebss = ADDR(.bss) + SIZEOF(.bss);
 
+  /* Heap region - starts after BSS and extends to end of RAM */
+  . = ALIGN(4);
+  _sheap = .;
+  _eheap = ORIGIN(RAM) + LENGTH(RAM) - 0x100000;  /* Reserve 1MB for stack */
+
   /DISCARD/ : {
     *(.eh_frame)
     *(.eh_frame_hdr)

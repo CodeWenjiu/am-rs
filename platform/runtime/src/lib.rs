@@ -3,18 +3,22 @@
 // Re-export common runtime code for all platforms
 pub use runtime_common::*;
 
-// Re-export the selected platform runtime based on features
+// ============================================================================
+// Platform Selection
+// ============================================================================
+// The build.rs script ensures exactly one platform feature is enabled.
+// To add a new platform:
+// 1. Add it to the platforms array in build.rs
+// 2. Add a new feature in Cargo.toml
+// 3. Add a new #[cfg(feature = "...")] block below
+// 4. Add the corresponding rerun-if-env-changed line in build.rs
+
 #[cfg(feature = "nemu")]
 pub use nemu_runtime::*;
 
 #[cfg(feature = "qemu")]
 pub use qemu_runtime::*;
 
-// Compile-time check to ensure exactly one platform is selected
-#[cfg(all(feature = "nemu", feature = "qemu"))]
-compile_error!(
-    "Cannot enable multiple platform features at once. Please select only one: nemu or qemu"
-);
-
-#[cfg(not(any(feature = "nemu", feature = "qemu")))]
-compile_error!("No platform feature selected. Please enable one: nemu or qemu");
+// Future platforms can be added here:
+// #[cfg(feature = "new_platform")]
+// pub use new_platform_runtime::*;

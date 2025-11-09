@@ -50,13 +50,13 @@ macro_rules! heap_init {
     () => {
         // Import linker symbols for heap region
         unsafe extern "C" {
-            static mut _sdata: u8;
-            static mut _edata: u8;
+            static mut _sheap: u8;
+            static mut _eheap: u8;
         }
 
         unsafe {
-            let heap_start = core::ptr::addr_of_mut!(_sdata) as usize;
-            let heap_end = core::ptr::addr_of_mut!(_edata) as usize;
+            let heap_start = core::ptr::addr_of_mut!(_sheap) as usize;
+            let heap_end = core::ptr::addr_of_mut!(_eheap) as usize;
             let heap_size = heap_end - heap_start;
             ALLOCATOR.init(heap_start, heap_size)
         }
@@ -82,9 +82,27 @@ macro_rules! preclude {
 /// Generate startup code
 ///
 /// This macro generates the `_start` and `__start__` entry points.
+/// It also initializes the stack pointer to the end of RAM.
 #[macro_export]
 macro_rules! platform_startup {
     () => {
+        #[unsafe(link_section = ".text._start")]
+        #[unsafe(export_name = "_start")]
+        #[unsafe(naked)]
+        pub unsafe extern "C" fn _start() -> ! {
+            // Initialize stack pointer and jump to __start__
+            // Stack grows downward, so we set sp to the top of RAM
+            core::arch::naked_asm!(
+                "
+                # Set stack pointer to end of RAM (128MB @ 0x80000000)
+                li sp, 0x88000000
+
+                # Jump to __start__
+                j __start__
+                "
+            )
+        }
+
         #[unsafe(link_section = ".text.__start__")]
         #[unsafe(export_name = "__start__")]
         pub unsafe extern "C" fn __start__() -> ! {
@@ -93,11 +111,6 @@ macro_rules! platform_startup {
             }
 
             unsafe { main() }
-        }
-
-        #[unsafe(export_name = "_start")]
-        pub unsafe extern "C" fn _start() -> ! {
-            unsafe { __start__() }
         }
     };
 }
