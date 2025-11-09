@@ -2,6 +2,7 @@
 
 // Platform-specific modules
 pub mod critical_section;
+pub mod exit;
 pub mod startup;
 pub mod stdio;
 

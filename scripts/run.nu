@@ -61,7 +61,6 @@ def main [bin, arch] {
     ]
 
     log info $"QEMU command: (($qemu_cmd | str join ' '))"
-    log info "Press Ctrl-A then X to exit QEMU"
     log info "----------------------------------------"
 
     # Run QEMU

@@ -5,6 +5,4 @@ runtime::binInit!();
 
 runtime::entry!(main);
 
-fn main() -> ! {
-    loop {}
-}
+fn main() {}

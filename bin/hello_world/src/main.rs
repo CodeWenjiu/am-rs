@@ -5,7 +5,6 @@ runtime::binInit!();
 
 runtime::entry!(main);
 
-fn main() -> ! {
+fn main() {
     println!("Hello_world!");
-    loop {}
 }

@@ -25,19 +25,26 @@ macro_rules! binInit {
 /// Entry point macro for main function
 ///
 /// This macro wraps the user's main function and performs initialization.
+/// After the user's main returns, it calls the platform-specific exit function.
 #[macro_export]
 macro_rules! entry {
     ($path:path) => {
         #[unsafe(export_name = "main")]
         pub unsafe fn __main() -> ! {
             // Type check the given path
-            let f: fn() -> ! = $path;
+            let f: fn() = $path;
 
             // Initialize heap
             $crate::heap_init!();
 
             // Call user's main
-            f()
+            f();
+
+            // Call platform-specific exit function
+            unsafe extern "Rust" {
+                fn platform_exit() -> !;
+            }
+            unsafe { platform_exit() }
         }
     };
 }

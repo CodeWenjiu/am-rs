@@ -5,7 +5,7 @@ runtime::binInit!();
 
 runtime::entry!(main);
 
-fn main() -> ! {
+fn main() {
     println!("Hello from Rust no_std!");
 
     let mut v = Vec::new();
@@ -22,6 +22,4 @@ fn main() -> ! {
     println!("{}", s);
 
     println!("All tests passed!");
-
-    loop {}
 }
