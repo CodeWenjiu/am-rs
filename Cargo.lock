@@ -105,6 +105,7 @@ dependencies = [
  "embedded-alloc",
  "embedded-hal",
  "macros",
+ "runtime-common",
 ]
 
 [[package]]
@@ -124,6 +125,7 @@ dependencies = [
  "embedded-alloc",
  "embedded-hal",
  "macros",
+ "runtime-common",
 ]
 
 [[package]]
@@ -156,6 +158,14 @@ dependencies = [
  "macros",
  "nemu_runtime",
  "qemu_runtime",
+ "runtime-common",
+]
+
+[[package]]
+name = "runtime-common"
+version = "0.1.0"
+dependencies = [
+ "embedded-alloc",
 ]
 
 [[package]]

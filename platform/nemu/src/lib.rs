@@ -1,54 +1,28 @@
 #![no_std]
 
-pub mod preclude;
+// Platform-specific modules
+pub mod critical_section;
+pub mod stdio;
 
-macros::mod_flat!(stdio, critical_section, heap);
+// Re-export stdio items for convenience
+pub use stdio::{Stdout, putc, stdout};
 
-#[unsafe(link_section = ".text.__start__")]
-#[unsafe(export_name = "__start__")]
-pub unsafe extern "C" fn __start__() -> ! {
-    unsafe extern "Rust" {
-        unsafe fn main() -> !;
-    }
+// Note: print! and println! macros are automatically exported due to #[macro_export]
 
-    unsafe { main() }
-}
+// Import common runtime macros and startup code from runtime-common crate
+// These will be available when someone depends on nemu_runtime
+pub use runtime_common::{binInit, entry, heap_init, platform_startup, preclude};
 
-#[unsafe(export_name = "_start")]
-pub unsafe extern "C" fn _start() -> ! {
-    unsafe { __start__() }
-}
+// Generate startup code using runtime's macro
+platform_startup!();
 
+// Platform-specific panic handler
 #[cfg(not(test))]
 use core::panic::PanicInfo;
+
 #[cfg(not(test))]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    println!("Panic: {}", _info);
+fn panic(info: &PanicInfo) -> ! {
+    println!("Panic: {}", info);
     loop {}
-}
-
-#[macro_export]
-macro_rules! entry {
-    ($path:path) => {
-        #[unsafe(export_name = "main")]
-        pub unsafe fn __main() -> ! {
-            // type check the given path
-            let f: fn() -> ! = $path;
-
-            $crate::heap_init!();
-            f()
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! binInit {
-    [ ] => {
-        $crate::preclude!();
-
-        use embedded_alloc::LlffHeap;
-        #[global_allocator]
-        static ALLOCATOR: LlffHeap = LlffHeap::empty();
-    };
 }
