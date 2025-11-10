@@ -40,7 +40,7 @@ const ISA_TARGET_MAP = {
 
 # ISAs that require special RUSTFLAGS
 const ISA_RUSTFLAGS = {
-    "riscv32imv": "-C target-feature=+f,+zve32x,+zve32f"  # Enable V extension but disable 64-bit subextensions, auto-vectorization, and limit vector bits to 32
+    "riscv32imv": "-C target-feature=+zve32x,+zvl64b"
 }
 
 # ============================================================================

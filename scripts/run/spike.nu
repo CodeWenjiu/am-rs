@@ -7,9 +7,9 @@ export def spike_run [bin, arch] {
     let platform = get_platform $arch
 
     let ISA = match $isa {
-        "riscv32i" => "RV32I",
-        "riscv32im" => "RV32IM",
-        "riscv32imv" => "RV32IMV",
+        "riscv32i" => "rv32i",
+        "riscv32im" => "rv32im",
+        "riscv32imv" => "rv32im_zve32x_zvl64b",
         _ => {
             log error $"Unknown ISA: ($isa)"
             return
