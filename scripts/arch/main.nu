@@ -40,7 +40,7 @@ const ISA_TARGET_MAP = {
 
 # ISAs that require special RUSTFLAGS
 const ISA_RUSTFLAGS = {
-    "riscv32imv": "-C target-feature=+v"  # Enable V extension
+    "riscv32imv": "-C target-feature=+f,+zve32x,+zve32f"  # Enable V extension but disable 64-bit subextensions, auto-vectorization, and limit vector bits to 32
 }
 
 # ============================================================================
@@ -59,7 +59,7 @@ const PLATFORM_CONFIGS = {
         description: "QEMU System Emulator"
     }
     spike: {
-        supported_isas: ["riscv32i", "riscv32im"],
+        supported_isas: ["riscv32i", "riscv32im", "riscv32imv"],
         description: "Spike RISC-V ISA Simulator"
     }
 }

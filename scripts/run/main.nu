@@ -3,6 +3,7 @@ source ../utils.nu
 use std/log
 
 source ./qemu.nu
+source ./spike.nu
 source ./nemu.nu
 
 def main [bin, arch] {
@@ -17,6 +18,7 @@ def main [bin, arch] {
 
     match $platform {
         "qemu" => (qemu_run $elf_file $arch)
+        "spike" => (spike_run $elf_file $arch)
         "nemu" => (nemu_run $elf_file $arch)
         _ => (log error $"Unknown platform: ($platform)")
     }
