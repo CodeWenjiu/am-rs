@@ -41,22 +41,20 @@ platform_matrix:
     @nu scripts/helper.nu platform-matrix
 
 # Build the project
-# Usage: just build [BIN] [ARCH]
-#   or:  BIN=hello ARCH=riscv32i-qemu just build
 build BIN="" ARCH="":
     @nu scripts/build.nu {{ BIN }} {{ ARCH }}
 
 # Generate disassembly and binary
-# Usage: just disasm [BIN] [ARCH]
-#   or:  BIN=hello ARCH=riscv32i-qemu just disasm
 disasm BIN="" ARCH="":
     @nu scripts/disasm.nu {{ BIN }} {{ ARCH }}
 
 # Run the program
-# Usage: just run [BIN] [ARCH]
-#   or:  BIN=hello ARCH=riscv32i-qemu just run
 run BIN="" ARCH="": (disasm BIN ARCH)
-    @nu scripts/run/main.nu {{ BIN }} {{ ARCH }}
+    @nu scripts/run/main.nu {{ BIN }} {{ ARCH }} false
+
+# Run the program in batch mode
+batch BIN="" ARCH="": (disasm BIN ARCH)
+    @nu scripts/run/main.nu {{ BIN }} {{ ARCH }} true
 
 # Clean build artifacts
 clean:
@@ -85,10 +83,10 @@ nemu BIN="" ISA="riscv32i":
 qemu-all BIN="":
     just run {{ BIN }} riscv32i-qemu
     just run {{ BIN }} riscv32im-qemu
-    just run {{ BIN }} riscv32imv-qemu
+    just run {{ BIN }} riscv32im_zve32x-qemu
 
 # Run on all NEMU platforms
 nemu-all BIN="":
     just run {{ BIN }} riscv32i-nemu
     just run {{ BIN }} riscv32im-nemu
-    just run {{ BIN }} riscv32imv-nemu
+    just run {{ BIN }} riscv32im_zve32x-nemu

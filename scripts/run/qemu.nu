@@ -2,7 +2,7 @@ source ../arch/main.nu
 source ../utils.nu
 use std/log
 
-export def qemu_run [bin, arch] {
+export def qemu_run [bin, arch, batch: bool] {
     let isa = get_isa $arch
     let platform = get_platform $arch
 
@@ -12,7 +12,7 @@ export def qemu_run [bin, arch] {
         "riscv32i" => "rv32",
         "riscv32im" => "rv32",
         "riscv32imac" => "rv32",
-        "riscv32imv" => "rv32,v=true,vlen=128",
+        "riscv32im_zve32x" => "rv32,v=true,vlen=128",
         _ => {
             log error $"Unknown ISA: ($isa)"
             return

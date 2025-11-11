@@ -2,34 +2,27 @@ source ../arch/main.nu
 source ../utils.nu
 use std/log
 
-export def spike_run [bin, arch] {
+export def spike_run [bin, arch, batch: bool] {
     let isa = get_isa $arch
     let platform = get_platform $arch
 
     let ISA = match $isa {
         "riscv32i" => "rv32i",
         "riscv32im" => "rv32im",
-        "riscv32imv" => "rv32im_zve32x_zvl64b",
+        "riscv32im_zve32x" => "rv32im_zve32x_zvl64b",
         _ => {
             log error $"Unknown ISA: ($isa)"
             return
         }
     }
 
-    # QEMU command
-    # -machine virt: Use the virt machine (generic virtual platform)
-    # -cpu: Specify CPU type
-    # -m: Memory size (default 128M)
-    # -nographic: No graphical output, use serial console
-    # -serial mon:stdio: Redirect serial to stdio
-    # -bios none: Don't load default BIOS
-    # -kernel: Load our bare-metal ELF
-    let spike_cmd = [
-        "spike"
-        "--isa" $ISA
-        "-m0x80000000:0x08000000"
-        $bin
-    ]
+    # Spike command
+    # -d: Enable interactive debugger in batch mode
+    # --isa: Specify ISA string
+    # -m: Memory range
+    let debug_flag = if $batch { ["-d"] } else { [] }
+    
+    let spike_cmd = ["spike" "--isa" $ISA "-m0x80000000:0x08000000"] ++ $debug_flag ++ [$bin]
 
     log info $"SPIKE command: (($spike_cmd | str join ' '))"
     log info $"Press 'Ctrl+C' to Terminate and quit SPIKE"
