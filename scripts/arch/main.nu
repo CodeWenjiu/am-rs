@@ -35,7 +35,7 @@ const ISA_TARGET_MAP = {
     "riscv32i": "riscv32i-unknown-none-elf",
     "riscv32im": "riscv32im-unknown-none-elf",
     "riscv32imac": "riscv32imac-unknown-none-elf",
-    "riscv32imv": "riscv32im-unknown-none-elf"  # V extension added via RUSTFLAGS
+    "riscv32imv": "riscv32im-unknown-none-elf"
 }
 
 # ISAs that require special RUSTFLAGS

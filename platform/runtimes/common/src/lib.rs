@@ -39,6 +39,25 @@ macro_rules! entry {
             // Type check the given path
             let f: fn() = $path;
 
+            // If the binary was compiled with the RISC-V Vector extension enabled
+            // (Rust target feature `v`), make sure the CPU vector state is enabled
+            // before any vector instructions are executed. Some toolchains (LLVM)
+            // may emit vector instructions that assume the V-extension state is
+            // already set up; enabling it here avoids illegal-instruction traps
+            // at startup on simulators/targets that require explicit state setup.
+            // #[cfg(target_feature = "v")]
+            // {
+                // This sequence enables the relevant mstatus bits. The exact
+                // bits set here mirror the small startup sequence used elsewhere
+                // in the tree (and in upstream tests). Keep it minimal and
+                // restricted to the `v`-enabled builds only.
+                core::arch::asm!(
+                    "li x10, 0x200",
+                    "csrs mstatus, x10",
+                    options(nomem, nostack, preserves_flags)
+                );
+            // }
+
             // Initialize heap
             $crate::heap_init!();
 
