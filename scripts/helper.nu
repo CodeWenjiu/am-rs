@@ -13,7 +13,7 @@ source ./utils.nu
 
 # List all available binaries
 export def "main list-bins" [] {
-    get_allbin
+    get_allbin | to json
 }
 
 # ============================================================================
@@ -22,7 +22,7 @@ export def "main list-bins" [] {
 
 # List all available architectures
 export def "main list-archs" [] {
-    get_all_archs
+    get_all_archs | to json
 }
 
 # Show architecture configuration summary

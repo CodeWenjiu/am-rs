@@ -17,10 +17,10 @@ export def spike_run [bin, arch, batch: bool] {
     }
 
     # Spike command
-    # -d: Enable interactive debugger in batch mode
+    # -d: Enable interactive debugger (only in non-batch mode)
     # --isa: Specify ISA string
     # -m: Memory range
-    let debug_flag = if $batch { ["-d"] } else { [] }
+    let debug_flag = if $batch { [] } else { ["-d"] }
     
     let spike_cmd = ["spike" "--isa" $ISA "-m0x80000000:0x08000000"] ++ $debug_flag ++ [$bin]
 
