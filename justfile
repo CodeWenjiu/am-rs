@@ -43,14 +43,6 @@ platform_matrix:
 build BIN="" ARCH="":
     @nu scripts/build.nu {{ BIN }} {{ ARCH }}
 
-# Quick build/run shortcuts for common scenarios
-build-all ARCH="":
-    @nu scripts/build.nu "" {{ ARCH }}
-
-# Build specific binary for all architectures
-build-bin BIN="":
-    @nu scripts/build.nu {{ BIN }} ""
-
 # Generate disassembly and binary
 disasm BIN="" ARCH="":
     @nu scripts/disasm.nu {{ BIN }} {{ ARCH }}
