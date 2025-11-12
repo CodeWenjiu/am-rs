@@ -4,7 +4,7 @@ set shell := ["nu", "-c"]
 
 # Default recipe
 _default:
-    just --list
+    @just --list
 
 # Bump env dependencies to latest versions
 bump-env:
