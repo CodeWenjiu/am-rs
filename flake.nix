@@ -26,6 +26,7 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
+            # rust toolchain
             (rust-bin.stable.latest.default.override {
               extensions = [
                 "rust-src"
@@ -39,13 +40,17 @@
                 "riscv32imac-unknown-none-elf"
               ];
             })
-
             cargo-binutils
             cargo-edit
 
+            # simulators and tools
             qemu
             spike
             dtc
+
+            # scripts dependencies
+            nushell
+            just
           ];
         };
       }
