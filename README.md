@@ -1,9 +1,9 @@
 # AM-RS
-This project is inspired by AbstractMachine and aims to provide a relatively simple Rust bare-metal programming framework.
+This project is inspired by [abstract-machine](https://github.com/NJU-ProjectN/abstract-machine) and aims to provide a relatively simple Rust bare-metal programming framework.
 
 # Goals
 ## ISA Support
-- RISC-V (32-bit) - Partially Complete
+- RISC-V (32-bit) - Partially ✓
 - x86 - ✗
 - arm - ✗
 
@@ -11,8 +11,8 @@ This project is inspired by AbstractMachine and aims to provide a relatively sim
 - stdio - ✓
 - Memory Allocator - ✓
 - panic - ✓
-- RTIC  - ✗
 - Interrupt and Exception Handling - ✗
+- RTIC  - ✗
 
 # Usage
 ## Build
@@ -20,10 +20,17 @@ for example, to build `hello` binary for nemu in RISC-V arch `riscv32im`:
 ```nu
 just build hello riscv32im-nemu
 ```
-or build all binaries for qemu in RISC-V arch `riscv32im`:
+or build all binaries for qemu in RISC-V arch `riscv32im_zve32x`:
 ```nu
-just build "" riscv32im-qemu
+just build "" riscv32im_zve32x-qemu
 ```
+
+## Disassembly
+to generate disassembly and binary for `hello` binary for nemu in RISC-V arch `riscv32im`:
+```nu
+just disasm hello riscv32im-nemu
+```
+result will be in `target/disasm/nemu/riscv32im/hello/` folder.
 
 ## Run
 For emulators that have been released and imported in `flake.nix`, you can run the `run` command to directly execute the compiled program.
@@ -31,7 +38,7 @@ For emulators that have been released and imported in `flake.nix`, you can run t
 just run hello riscv32im-qemu
 ```
 
-## List Supported Binaries and Platforms
+## List All Binaries and Platforms
 ```nu
 just list_bins
 just list_archs

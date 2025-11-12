@@ -1,5 +1,5 @@
 {
-  description = "Flake configuration for my systems";
+  description = "Flake configuration for am-rs";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
