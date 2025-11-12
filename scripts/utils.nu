@@ -9,3 +9,11 @@ export def get_allbin [] {
         }
         | flatten
 }
+
+export def validate_bin [bin: string] {
+    if ($bin not-in (get_allbin)) {
+        error make {
+            msg: $"Unsupported Binary: ($bin). Available binaries: (get_allbin)"
+        }
+    }
+}

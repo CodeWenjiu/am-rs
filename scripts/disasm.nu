@@ -10,6 +10,8 @@ export def get_disasm_dir [bin, arch] {
 
 def disasm [bin?, arch?] {
     load-env (prepare_env $arch)
+    validate_bin $bin
+
     let target = get_target $arch
     let platform = get_platform $arch
 

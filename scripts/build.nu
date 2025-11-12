@@ -4,9 +4,11 @@ use std/log
 
 def build [bin, arch] {
     load-env (prepare_env $arch)
+    validate_bin $bin
+
     let target = get_target $arch
     let platform = get_platform $arch
-
+    
     log info $"Building for architecture: ($arch), binary: ($bin), target: ($target)"
 
     # Build with the appropriate runtime feature based on platform
@@ -21,11 +23,6 @@ def "main build-all-arch" [bin: string] {
     $archs | par-each {|arch|
         build $bin $arch
     } | ignore
-}
-
-# Build a specific binary for a specific architecture
-def "main build-one" [bin: string, arch: string] {
-    build $bin $arch
 }
 
 # Build all binaries for all architectures (default)
