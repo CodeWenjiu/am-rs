@@ -11,19 +11,17 @@ members = [
     "platform/runtimes/spike",
 
     # test binary
-    "bin/dummy",
-    "bin/hello",
-    "bin/panic",
-    "bin/alloc",
+    "bin/test/dummy",
+    "bin/test/hello",
+    "bin/test/panic",
+    "bin/test/alloc",
+    "bin/test/vector",
 
     # basic binary
-    "bin/stdin",
-
-    # simd test
-    "bin/vector",
+    "bin/basic/stdin",
 
     # That's insane
-    "bin/rv64emu",
+    "bin/others/rv64emu",
 ]
 
 [workspace.dependencies]

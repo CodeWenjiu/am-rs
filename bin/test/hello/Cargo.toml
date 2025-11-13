@@ -1,0 +1,16 @@
+[package]
+name = "hello"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = [ "wenjiu <27843087979@qq.com>" ]
+
+[build-dependencies]
+build-helper = { path = "../../../platform/build-helper" }
+
+[dependencies]
+macros = { path = "../../../macros" }
+# Use runtime with feature selection instead of specific runtime
+runtime = { path = "../../../platform/runtime" }
+embedded-hal = { workspace = true }
+embedded-alloc = { workspace = true }

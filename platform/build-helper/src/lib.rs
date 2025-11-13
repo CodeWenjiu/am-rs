@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::{env, path::{Path, PathBuf}};
 
 pub enum Platform {
     Nemu,
@@ -88,11 +88,14 @@ pub fn link_helper() {
     };
 
     // Get the workspace root (go up from bin/xxx to project root)
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let workspace_root = manifest_dir
-        .parent()
-        .and_then(|p| p.parent())
-        .expect("Failed to find workspace root");
+    let output = std::process::Command::new(env!("CARGO"))
+        .arg("locate-project")
+        .arg("--workspace")
+        .arg("--message-format=plain")
+        .output()
+        .unwrap()
+        .stdout;
+    let workspace_root = Path::new(std::str::from_utf8(&output).unwrap().trim()).parent().unwrap().to_path_buf();
 
     // Construct linker script filename based on target prefix
     // e.g., "riscv32i" -> "riscv32i_link.x"
