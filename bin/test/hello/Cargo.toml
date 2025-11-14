@@ -8,6 +8,9 @@ authors = [ "wenjiu <27843087979@qq.com>" ]
 [build-dependencies]
 build-helper = { path = "../../../platform/build-helper" }
 
+[package.metadata.test]
+involved = true
+
 [dependencies]
 macros = { path = "../../../macros" }
 # Use runtime with feature selection instead of specific runtime

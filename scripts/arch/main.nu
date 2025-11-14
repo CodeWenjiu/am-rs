@@ -17,8 +17,6 @@ use std/log
 #
 # ## Core Functions
 # - validate_arch: Validate an architecture string
-# - get_isa: Extract ISA from architecture string
-# - get_platform: Extract platform from architecture string
 # - get_target: Get Rust target triple for an architecture
 # - prepare_env: Prepare environment variables for building
 #
@@ -68,28 +66,36 @@ const PLATFORM_CONFIGS = {
 # Core Functions
 # ============================================================================
 
-# Extract ISA from architecture string
-# Example: "riscv32i-nemu" -> "riscv32i"
-export def get_isa [arch: string] {
+export def arch_split [arch: string] {
     let parts = $arch | split row "-"
-    if ($parts | length) < 2 {
+    if ($parts | length) != 2 {
         error make {
             msg: $"Invalid architecture format: ($arch). Expected format: {{isa}}-{{platform}}"
         }
     }
-    $parts | get 0
+    let isa = $parts | get 0
+    let platform = $parts | get 1
+    let target = $ISA_TARGET_MAP | get $isa
+
+    {
+        isa: $isa
+        platform: $platform
+        target: $target
+    }
 }
 
-# Extract platform from architecture string
-# Example: "riscv32i-nemu" -> "nemu"
-export def get_platform [arch: string] {
-    let parts = $arch | split row "-"
-    if ($parts | length) < 2 {
+# Get Rust target triple for a given architecture
+export def get_target [arch: string] {
+    validate_arch $arch
+    let isa = (arch_split $arch).isa
+
+    if ($isa in $ISA_TARGET_MAP) {
+        $ISA_TARGET_MAP | get $isa
+    } else {
         error make {
-            msg: $"Invalid architecture format: ($arch). Expected format: {{isa}}-{{platform}}"
+            msg: $"No target mapping found for ISA: ($isa)"
         }
     }
-    $parts | get 1
 }
 
 # Check if a specific ISA-platform combination is valid
@@ -105,8 +111,9 @@ export def is_combination_valid [isa: string, platform: string] {
 # Validate that an architecture string is supported
 # This is the main validation function used by the build system
 export def validate_arch [arch: string] {
-    let isa = get_isa $arch
-    let platform = get_platform $arch
+    let split = arch_split $arch
+    let isa = $split.isa
+    let platform = $split.platform
 
     # Check if ISA exists globally
     if not ($isa in $SUPPORTED_ISAS) {
@@ -133,27 +140,13 @@ export def validate_arch [arch: string] {
     }
 }
 
-# Get Rust target triple for a given architecture
-export def get_target [arch: string] {
-    validate_arch $arch
-    let isa = get_isa $arch
-
-    if ($isa in $ISA_TARGET_MAP) {
-        $ISA_TARGET_MAP | get $isa
-    } else {
-        error make {
-            msg: $"No target mapping found for ISA: ($isa)"
-        }
-    }
-}
-
 # Prepare environment variables for building a specific architecture
 export def prepare_env [arch: string] {
     validate_arch $arch
 
     mut env_vars = {ARCH: $arch}
 
-    let isa = get_isa $arch
+    let isa = (arch_split $arch).isa
 
     # Add RUSTFLAGS if ISA requires special flags
     if ($isa in $ISA_RUSTFLAGS) {

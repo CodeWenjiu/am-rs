@@ -1,4 +1,4 @@
-export def get_allbin [] {
+export def get_all_bins [] {
     cargo metadata --format-version 1 --no-deps
         | from json
         | get packages
@@ -11,9 +11,25 @@ export def get_allbin [] {
 }
 
 export def validate_bin [bin: string] {
-    if ($bin not-in (get_allbin)) {
+    if ($bin not-in (get_all_bins)) {
         error make {
-            msg: $"Unsupported Binary: ($bin). Available binaries: (get_allbin)"
+            msg: $"Unsupported Binary: ($bin). Available binaries: (get_all_bins)"
         }
     }
+}
+
+export def get_bin_matadata [bin: string] {
+    # Get the package metadata for the binary
+    let metadata = (cargo metadata --format-version 1 --no-deps | from json)
+    let packages = ($metadata.packages | where {|pkg| 
+        ($pkg.targets | any {|target| 
+            $target.name == $bin and ("bin" in $target.kind)
+        })
+    })
+    
+    if ($packages | length) != 1 {
+        return null
+    }
+    
+    return ($packages | get 0).metadata
 }

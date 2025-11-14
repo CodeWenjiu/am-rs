@@ -3,8 +3,9 @@ source ../utils.nu
 use std/log
 
 export def spike_run [bin, arch, batch: bool] {
-    let isa = get_isa $arch
-    let platform = get_platform $arch
+    let split = arch_split $arch
+    let isa = $split.isa
+    let platform = $split.platform
 
     let ISA = match $isa {
         "riscv32i" => "rv32i",
@@ -24,9 +25,11 @@ export def spike_run [bin, arch, batch: bool] {
     
     let spike_cmd = ["spike" "--isa" $ISA "-m0x80000000:0x08000000"] ++ $debug_flag ++ [$bin]
 
-    log info $"SPIKE command: (($spike_cmd | str join ' '))"
-    log info $"Press 'Ctrl+C' to Terminate and quit SPIKE"
-    log info "----------------------------------------"
+    if $batch == false {
+        log info $"SPIKE command: (($spike_cmd | str join ' '))"
+        log info $"Press 'Ctrl+C' to Terminate and quit SPIKE"
+        log info "----------------------------------------"
+    }
 
     # Run QEMU
     run-external ...$spike_cmd

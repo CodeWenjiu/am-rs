@@ -40,24 +40,20 @@ platform_matrix:
     @nu scripts/helper.nu platform-matrix
 
 # Build the project
-build BIN="" ARCH="":
-    @nu scripts/build.nu {{ BIN }} {{ ARCH }}
+build BIN="_ALL" ARCH="_ALL":
+    @nu scripts/build/main.nu {{ BIN }} {{ ARCH }}
 
 # Generate disassembly and binary
-disasm BIN="" ARCH="":
-    @nu scripts/disasm.nu {{ BIN }} {{ ARCH }}
+disasm BIN="_ALL" ARCH="_ALL":
+    @nu scripts/build/disasm.nu {{ BIN }} {{ ARCH }}
 
 # Run the program
-run BIN="" ARCH="": (disasm BIN ARCH)
-    @nu scripts/run/main.nu {{ BIN }} {{ ARCH }} false
+run BIN ARCH:
+    @nu scripts/run/main.nu run {{ BIN }} {{ ARCH }}
 
 # Run the program in batch mode
-batch BIN="" ARCH="": (disasm BIN ARCH)
-    @nu scripts/run/main.nu {{ BIN }} {{ ARCH }} true
-
-# Run all binaries for an architecture in batch mode
-batch-all ARCH:
-    @nu scripts/helper.nu list-bins | from json | each { |bin| just batch $bin {{ARCH}};}
+test BIN="_ALL" ARCH="_ALL":
+    @nu scripts/run/main.nu test {{ BIN }} {{ ARCH }}
 
 # Clean build artifacts
 clean:

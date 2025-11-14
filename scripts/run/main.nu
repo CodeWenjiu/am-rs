@@ -6,20 +6,96 @@ source ./qemu.nu
 source ./spike.nu
 source ./nemu.nu
 
-def main [bin, arch, batch: bool] {
-    let isa = get_isa $arch
-    let platform = get_platform $arch
+source ../build/disasm.nu
 
-    let disasm_dir = $"target/disasm/($platform)/($isa)/($bin)"
-    let elf_file = $"($disasm_dir)/image.elf"
+def get_elf [bin, arch] {
+    let elf_file = $"(get_disasm_dir $bin $arch)/image.elf"
+    return $elf_file
+}
 
-    log info $"Running ($bin) for architecture: ($arch)"
-    log info $"ELF file: ($elf_file)"
+def pla_run [bin, arch, batch: bool] {
+    let elf = get_elf $bin $arch
+    let platform = (arch_split $arch).platform
+
+    if ($elf | path exists) == false {
+        if (disasm $bin $arch) == false {
+            return
+        }
+    }
 
     match $platform {
-        "qemu" => (qemu_run $elf_file $arch $batch)
-        "spike" => (spike_run $elf_file $arch $batch)
-        "nemu" => (nemu_run $elf_file $arch $batch)
+        "qemu" => (qemu_run $elf $arch $batch)
+        "spike" => (spike_run $elf $arch $batch)
+        "nemu" => (nemu_run $elf $arch $batch)
         _ => (log error $"Unknown platform: ($platform)")
+    }
+}
+
+def "main run" [bin, arch] {
+    log info $"Running ($bin) for architecture: ($arch)"
+
+    pla_run $bin $arch false
+}
+
+def is_test_involved [bin] {
+    let test_matadata = get_bin_matadata $bin | get -i test
+    ($test_matadata != null and $test_matadata.involved == true)
+}
+
+def "main user" [] {
+    get_all_bins | 
+        par-each {|bin|
+            if (is_test_involved $bin) == false {
+                return
+            }
+
+            print $"Testing binary: ($bin)"
+        }
+}
+
+def test_arch [bin: string, arch: string] {
+    match $bin {
+        "_ALL" => {
+            log info $"Testing architecture: ($arch)"
+            let result = get_all_bins | par-each {|bin|
+                if (is_test_involved $bin) == false {
+                    return
+                }
+                let stdout = pla_run $bin $arch true
+                {
+                    binary: $bin
+                    stdout: $stdout
+                    quit_state: true
+                }
+            }
+            print $result
+
+            print {
+                total: ($result | length)
+                passed: ($result | where {|r| $r.quit_state == true} | length)
+                failed: ($result | where {|r| $r.quit_state != true} | length)
+            }
+        }
+
+        _ => {
+            log info $"Testing ($bin) for architecture: ($arch)"
+            pla_run $bin $arch true
+        }
+    }
+}
+
+def "main test" [bin: string, arch: string] {
+    match $arch {
+        "_ALL" => {
+            get_all_archs | par-each {|arch|
+                {
+                    arch: $arch
+                    result: (test_arch $bin $arch)
+                }
+            }
+        }
+        _ => {
+            test_arch $bin $arch
+        }
     }
 }

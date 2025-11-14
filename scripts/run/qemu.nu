@@ -3,8 +3,9 @@ source ../utils.nu
 use std/log
 
 export def qemu_run [bin, arch, batch: bool] {
-    let isa = get_isa $arch
-    let platform = get_platform $arch
+    let split = arch_split $arch
+    let isa = $split.isa
+    let platform = $split.platform
 
     # Determine QEMU machine and CPU based on ISA
     let qemu_machine = "virt"
@@ -38,9 +39,11 @@ export def qemu_run [bin, arch, batch: bool] {
         "-kernel" $bin
     ]
 
-    log info $"QEMU command: (($qemu_cmd | str join ' '))"
-    log info $"Press 'Ctrl+A X' to exit QEMU"
-    log info "----------------------------------------"
+    if $batch == false {
+        log info $"QEMU command: (($qemu_cmd | str join ' '))"
+        log info $"Press 'Ctrl+A X' to exit QEMU"
+        log info "----------------------------------------"
+    }
 
     # Run QEMU
     run-external ...$qemu_cmd

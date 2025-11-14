@@ -5,6 +5,9 @@ edition = "2024"
 license = "MIT"
 authors = [ "wenjiu <27843087979@qq.com>" ]
 
+[package.metadata.test]
+involved = true
+
 [build-dependencies]
 build-helper = { path = "../../../platform/build-helper" }
 

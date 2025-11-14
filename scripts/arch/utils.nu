@@ -133,12 +133,12 @@ export def print_isa_matrix [] {
 
     get_supported_isas | each {|isa|
         let platforms = get_isa_archs $isa | each {|arch|
-            get_platform $arch
+            (arch_split $arch).platform
         }
 
         print $"($isa):"
         print $"  Supported by: ($platforms)\n"
-    } | ignore
+    }
 }
 
 # Print platform capability matrix
@@ -151,5 +151,5 @@ export def print_platform_matrix [] {
         print $"  Supported ISAs:"
         print $config.supported_isas
         print ""
-    } | ignore
+    }
 }

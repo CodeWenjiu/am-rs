@@ -13,7 +13,7 @@ source ./utils.nu
 
 # List all available binaries
 export def "main list-bins" [] {
-    get_allbin | to json
+    get_all_bins | to json
 }
 
 # ============================================================================

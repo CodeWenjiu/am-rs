@@ -1,4 +1,4 @@
-use std::{env, path::{Path, PathBuf}};
+use std::{env, path::Path};
 
 pub enum Platform {
     Nemu,
@@ -51,7 +51,6 @@ fn get_platform() -> Platform {
 
     match Platform::from_str(platform_env) {
         Some(platform) => {
-            println!("cargo:warning=Using platform: {}", platform_env);
             platform
         }
         None => {
