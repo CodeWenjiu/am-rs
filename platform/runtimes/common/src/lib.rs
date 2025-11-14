@@ -47,15 +47,15 @@ macro_rules! entry {
             // at startup on simulators/targets that require explicit state setup.
             // #[cfg(target_feature = "v")]
             // {
-                // This sequence enables the relevant mstatus bits. The exact
-                // bits set here mirror the small startup sequence used elsewhere
-                // in the tree (and in upstream tests). Keep it minimal and
-                // restricted to the `v`-enabled builds only.
-                core::arch::asm!(
-                    "li x10, 0x200",
-                    "csrs mstatus, x10",
-                    options(nomem, nostack, preserves_flags)
-                );
+            // This sequence enables the relevant mstatus bits. The exact
+            // bits set here mirror the small startup sequence used elsewhere
+            // in the tree (and in upstream tests). Keep it minimal and
+            // restricted to the `v`-enabled builds only.
+            core::arch::asm!(
+                "li x10, 0x200",
+                "csrs mstatus, x10",
+                options(nomem, nostack, preserves_flags)
+            );
             // }
 
             // Initialize heap
@@ -85,7 +85,7 @@ macro_rules! preclude {
         use runtime::{print, println, stdin};
 
         // Import common alloc types
-        use alloc::{boxed::Box, rc::Rc, string::String, vec::Vec};
+        use alloc::{boxed::Box, rc::Rc, string::String, vec, vec::Vec};
     };
 }
 
