@@ -17,10 +17,8 @@ def pla_run [bin, arch, batch: bool] {
     let elf = get_elf $bin $arch
     let platform = (arch_split $arch).platform
 
-    if ($elf | path exists) == false {
-        if (disasm $bin $arch) == false {
-            return
-        }
+    if (disasm $bin $arch) == false {
+        return
     }
 
     match $platform {

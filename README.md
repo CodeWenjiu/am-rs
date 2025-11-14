@@ -13,6 +13,7 @@ This project is inspired by [abstract-machine](https://github.com/NJU-ProjectN/a
 - panic - ✓
 - Interrupt and Exception Handling - ✗
 - RTIC  - ✗
+- tock  - ✗
 
 # Usage
 ## Build
@@ -22,7 +23,7 @@ just build hello riscv32im-nemu
 ```
 or build all binaries for qemu in RISC-V arch `riscv32im_zve32x`:
 ```sh
-just build "" riscv32im_zve32x-qemu
+just build _ALL riscv32im_zve32x-qemu
 ```
 
 ## Disassembly
