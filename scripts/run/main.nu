@@ -36,12 +36,12 @@ def "main run" [bin, arch] {
 }
 
 def is_test_involved [bin] {
-    let test_matadata = get_bin_matadata $bin | get -i test
+    let test_matadata = get_bin_matadata $bin | get test?
     ($test_matadata != null and $test_matadata.involved == true)
 }
 
 def "main user" [] {
-    get_all_bins | 
+    get_all_bins |
         par-each {|bin|
             if (is_test_involved $bin) == false {
                 return

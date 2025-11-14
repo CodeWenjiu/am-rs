@@ -22,6 +22,7 @@ members = [
 
     # That's insane
     "bin/others/rv64emu",
+    "bin/others/mnist",
 ]
 
 [workspace.dependencies]

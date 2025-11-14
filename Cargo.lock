@@ -193,6 +193,17 @@ name = "macros"
 version = "0.1.0"
 
 [[package]]
+name = "mnist"
+version = "0.1.0"
+dependencies = [
+ "build-helper",
+ "embedded-alloc",
+ "embedded-hal",
+ "macros",
+ "runtime",
+]
+
+[[package]]
 name = "nemu_runtime"
 version = "0.1.0"
 dependencies = [

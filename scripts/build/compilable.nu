@@ -1,5 +1,5 @@
 def is_compilable [bin, arch] {
-    let arch_metadata = get_bin_matadata $bin | get -i arch
+    let arch_metadata = get_bin_matadata $bin | get arch?
     match $arch_metadata {
         null => true,
         _ => {
