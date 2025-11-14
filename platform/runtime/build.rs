@@ -15,12 +15,15 @@ fn main() {
     // Validate exactly one platform is enabled
     match enabled_platforms.len() {
         0 => {
-            eprintln!("ERROR: No platform feature enabled!");
-            eprintln!("Available platforms: {}", platforms.join(", "));
-            eprintln!("Please enable exactly one platform feature.");
-            eprintln!();
-            eprintln!("Example: cargo build --features runtime/nemu");
-            std::process::exit(1);
+            let target = env::var("TARGET").expect("TARGET environment variable not set");
+            if target != "x86_64-unknown-linux-gnu" {
+                eprintln!("ERROR: No platform feature enabled!");
+                eprintln!("Available platforms: {}", platforms.join(", "));
+                eprintln!("Please enable exactly one platform feature.");
+                eprintln!();
+                eprintln!("Example: cargo build --features runtime/nemu");
+                std::process::exit(1);
+            }
         }
         1 => {
             println!("cargo:warning=Using platform: {}", enabled_platforms[0]);

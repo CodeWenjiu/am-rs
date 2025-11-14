@@ -75,6 +75,11 @@ pub fn link_helper() {
 
     // Get the target triple
     let target = env::var("TARGET").expect("TARGET environment variable not set");
+    if target == "x86_64-unknown-linux-gnu" {
+        // Skip linking for host target
+        println!("cargo:warning=Host target detected, skipping linker script configuration");
+        return;
+    }
 
     // Extract the target prefix (part before the first '-')
     // e.g., "riscv32i-unknown-none-elf" -> "riscv32i"

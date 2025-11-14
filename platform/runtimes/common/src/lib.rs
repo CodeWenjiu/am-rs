@@ -82,7 +82,7 @@ macro_rules! preclude {
         extern crate alloc;
 
         // Import print macros from runtime crate
-        use runtime::{print, println};
+        use runtime::{print, println, stdin};
 
         // Import common alloc types
         use alloc::{boxed::Box, rc::Rc, string::String, vec::Vec};

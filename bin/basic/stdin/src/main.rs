@@ -1,8 +1,8 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(test), no_main)]
+#![allow(unstable_features)]
 
 runtime::binInit!();
-
 runtime::entry!(main);
 
 fn main() {
@@ -11,7 +11,7 @@ fn main() {
     // Test 1: Single character input (blocking)
     println!("Test 1: Single character input");
     println!("Press any key: ");
-    let ch = runtime::stdin().getc();
+    let ch = stdin().getc();
     println!("You pressed: '{}' (0x{:02x})\n", ch as char, ch);
 
     // Test 2: Non-blocking input with polling
@@ -19,7 +19,7 @@ fn main() {
     println!("Press a key within 5000 iterations or wait...");
     let mut found = false;
     for i in 0..5000 {
-        if let Some(ch) = runtime::stdin().try_getc() {
+        if let Some(ch) = stdin().try_getc() {
             println!("\nGot '{}' at iteration {}", ch as char, i);
             found = true;
             break;
@@ -37,7 +37,7 @@ fn main() {
     println!("Test 3: Line input");
     println!("Enter your name (press Enter): ");
     let mut name = String::new();
-    runtime::stdin().read_line(&mut name);
+    stdin().read_line(&mut name);
     println!("Hello, {}!\n", name);
 
     // Test 4: Simple menu
@@ -49,7 +49,7 @@ fn main() {
         println!("3. Exit");
         println!("Choice: ");
 
-        let choice = runtime::stdin().getc();
+        let choice = stdin().getc();
         println!("{}", choice as char);
 
         match choice {
@@ -75,7 +75,7 @@ fn main() {
     println!("\nTest 5: Echo mode");
     println!("Type characters (press 'q' to quit):");
     loop {
-        let ch = runtime::stdin().getc();
+        let ch = stdin().getc();
 
         if ch == b'q' || ch == b'Q' {
             println!("\nExiting echo mode...");
