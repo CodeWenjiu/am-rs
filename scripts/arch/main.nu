@@ -38,7 +38,7 @@ const ISA_TARGET_MAP = {
 
 # ISAs that require special RUSTFLAGS
 const ISA_RUSTFLAGS = {
-    "riscv32im_zve32x": "-C target-feature=+zve32x,+zvl64b"
+    "riscv32im_zve32x": "-C target-feature=+zve32x,+zvl128b"
 }
 
 # ============================================================================

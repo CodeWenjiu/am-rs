@@ -10,7 +10,7 @@ export def spike_run [bin, arch, batch: bool] {
     let ISA = match $isa {
         "riscv32i" => "rv32i",
         "riscv32im" => "rv32im",
-        "riscv32im_zve32x" => "rv32im_zve32x_zvl64b",
+        "riscv32im_zve32x" => "rv32im_zve32x_zvl128b",
         _ => {
             log error $"Unknown ISA: ($isa)"
             return
@@ -22,7 +22,7 @@ export def spike_run [bin, arch, batch: bool] {
     # --isa: Specify ISA string
     # -m: Memory range
     let debug_flag = if $batch { [] } else { ["-d"] }
-    
+
     let spike_cmd = ["spike" "--isa" $ISA "-m0x80000000:0x08000000"] ++ $debug_flag ++ [$bin]
 
     if $batch == false {

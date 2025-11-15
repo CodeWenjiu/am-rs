@@ -5,6 +5,106 @@ runtime::binInit!();
 
 runtime::entry!(main);
 
+// Command line arguments simulation (for benchmark mode)
+// In a real embedded system, this would come from boot parameters or configuration
+static BENCHMARK_MODE: bool = true; // Set to true for benchmark-only mode
+
+// Benchmark configuration
+const BENCHMARK_ITERATIONS: usize = 1000;
+const WARMUP_ITERATIONS: usize = 100;
+const DETAILED_BENCHMARK_ITERATIONS: usize = 100;
+
+// RISC-V cycle counter access
+#[inline(always)]
+fn read_cycle_counter() -> u32 {
+    let cycles: u32;
+    unsafe {
+        core::arch::asm!("rdcycle {}", out(reg) cycles);
+    }
+    cycles
+}
+
+/// Run detailed performance analysis on individual functions
+fn detailed_performance_analysis(
+    fc1_weights: &[[i8; 784]; 256],
+    _fc2_weights: &[[i8; 256]; 128],
+    _fc3_weights: &[[i8; 128]; 10],
+    fc1_scale_q16: i32,
+    _fc2_scale_q16: i32,
+    _fc3_scale_q16: i32,
+) {
+    println!("=== DETAILED PERFORMANCE ANALYSIS ===");
+
+    let benchmark_image_data = include_bytes!("../test_images/test_image_00000.bin");
+    let (image_data, _) = parse_image_binary(benchmark_image_data);
+    let normalized_input = normalize_input_pure_int8(&image_data);
+
+    // Benchmark individual components
+    let mut total_cycles: u64 = 0;
+
+    // Benchmark normalize_input_pure_int8
+    let start = read_cycle_counter();
+    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
+        let _ = normalize_input_pure_int8(&image_data);
+    }
+    let end = read_cycle_counter();
+    let norm_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
+    println!("normalize_input_pure_int8: {} cycles/call", norm_cycles);
+    total_cycles += norm_cycles;
+
+    // Benchmark FC1 matrix multiplication
+    let start = read_cycle_counter();
+    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
+        let _ = int8_matmul_symmetric::<256, 784>(fc1_weights, &normalized_input, fc1_scale_q16);
+    }
+    let end = read_cycle_counter();
+    let fc1_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
+    println!("FC1 matmul (256x784): {} cycles/call", fc1_cycles);
+    total_cycles += fc1_cycles;
+
+    // Benchmark int32_to_int8_with_scaling
+    let fc1_output =
+        int8_matmul_symmetric::<256, 784>(fc1_weights, &normalized_input, fc1_scale_q16);
+    let start = read_cycle_counter();
+    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
+        let _ = int32_to_int8_with_scaling(&fc1_output);
+    }
+    let end = read_cycle_counter();
+    let scale_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
+    println!("int32_to_int8_with_scaling: {} cycles/call", scale_cycles);
+    total_cycles += scale_cycles;
+
+    // Benchmark relu6_int8
+    let mut fc1_activations = int32_to_int8_with_scaling(&fc1_output);
+    let start = read_cycle_counter();
+    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
+        relu6_int8(&mut fc1_activations);
+    }
+    let end = read_cycle_counter();
+    let relu_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
+    println!("relu6_int8: {} cycles/call", relu_cycles);
+    total_cycles += relu_cycles;
+
+    println!("Estimated total cycles per inference: {}", total_cycles);
+    println!("Breakdown:");
+    println!(
+        "  - Input normalization: {:.1}%",
+        (norm_cycles * 100) as f64 / total_cycles as f64
+    );
+    println!(
+        "  - FC1 matmul: {:.1}%",
+        (fc1_cycles * 100) as f64 / total_cycles as f64
+    );
+    println!(
+        "  - Scaling: {:.1}%",
+        (scale_cycles * 100) as f64 / total_cycles as f64
+    );
+    println!(
+        "  - Activation: {:.1}%",
+        (relu_cycles * 100) as f64 / total_cycles as f64
+    );
+}
+
 // Compile-time weight parsing using const generics
 const fn parse_weight_binary_const<const ROWS: usize, const COLS: usize>(
     data: &'static [u8],
@@ -246,6 +346,47 @@ fn main() {
     println!("  FC3_SCALE: {:.6} -> Q16: {}", fc3_scale, fc3_scale_q16);
     println!();
 
+    // Run benchmarks based on mode
+    if BENCHMARK_MODE {
+        // Benchmark-only mode - skip accuracy testing
+        println!("=== BENCHMARK-ONLY MODE ===");
+
+        // Run detailed performance analysis
+        detailed_performance_analysis(
+            &fc1_weights,
+            &fc2_weights,
+            &fc3_weights,
+            fc1_scale_q16,
+            fc2_scale_q16,
+            fc3_scale_q16,
+        );
+        println!();
+
+        // Run full inference benchmark
+        run_benchmark(
+            &fc1_weights,
+            &fc2_weights,
+            &fc3_weights,
+            fc1_scale_q16,
+            fc2_scale_q16,
+            fc3_scale_q16,
+        );
+
+        return; // Exit after benchmarks
+    } else {
+        // Normal mode - run quick benchmark then accuracy test
+        println!("=== QUICK BENCHMARK ===");
+        run_benchmark(
+            &fc1_weights,
+            &fc2_weights,
+            &fc3_weights,
+            fc1_scale_q16,
+            fc2_scale_q16,
+            fc3_scale_q16,
+        );
+        println!();
+    }
+
     let test_images_data = vec![
         include_bytes!("../test_images/test_image_00000.bin"),
         include_bytes!("../test_images/test_image_00001.bin"),
@@ -282,7 +423,7 @@ fn main() {
         println!("Predicted:  {}", predicted_digit);
 
         if predicted_digit == true_label as usize {
-            println!("✅ CORRECT PREDICTION!");
+            println!("✓ CORRECT PREDICTION!");
             correct_predictions += 1;
         } else {
             println!("❌ WRONG PREDICTION!");
@@ -299,4 +440,134 @@ fn main() {
         "Accuracy: {:.2}%",
         (correct_predictions as f32 / total_images as f32) * 100.0
     );
+}
+
+/// Benchmark function to measure inference performance
+fn run_benchmark(
+    fc1_weights: &[[i8; 784]; 256],
+    fc2_weights: &[[i8; 256]; 128],
+    fc3_weights: &[[i8; 128]; 10],
+    fc1_scale_q16: i32,
+    fc2_scale_q16: i32,
+    fc3_scale_q16: i32,
+) {
+    println!("=== BENCHMARK MODE ===");
+    println!("Warmup iterations: {}", WARMUP_ITERATIONS);
+    println!("Benchmark iterations: {}", BENCHMARK_ITERATIONS);
+
+    // Use a representative test image for benchmarking
+    let benchmark_image_data = include_bytes!("../test_images/test_image_00000.bin");
+    let (image_data, _) = parse_image_binary(benchmark_image_data);
+
+    // Warmup phase
+    println!("Running warmup...");
+    for _ in 0..WARMUP_ITERATIONS {
+        let _ = mnist_inference_pure_int8(
+            fc1_weights,
+            fc2_weights,
+            fc3_weights,
+            &image_data,
+            fc1_scale_q16,
+            fc2_scale_q16,
+            fc3_scale_q16,
+        );
+    }
+
+    // Benchmark phase with cycle counting
+    println!("Running benchmark with cycle counting...");
+
+    let start_cycles = read_cycle_counter();
+
+    for _ in 0..BENCHMARK_ITERATIONS {
+        let _ = mnist_inference_pure_int8(
+            fc1_weights,
+            fc2_weights,
+            fc3_weights,
+            &image_data,
+            fc1_scale_q16,
+            fc2_scale_q16,
+            fc3_scale_q16,
+        );
+    }
+
+    let end_cycles = read_cycle_counter();
+    let total_cycles = (end_cycles - start_cycles) as u64;
+
+    // Calculate metrics
+    let cycles_per_inference = total_cycles / BENCHMARK_ITERATIONS as u64;
+    let inferences_per_second = if total_cycles > 0 {
+        // Assuming 1GHz clock for calculation
+        (1_000_000_000u64 * BENCHMARK_ITERATIONS as u64) / total_cycles
+    } else {
+        0
+    };
+
+    println!("=== BENCHMARK RESULTS ===");
+    println!("Total cycles measured: {}", total_cycles);
+    println!("Iterations completed: {}", BENCHMARK_ITERATIONS);
+    println!("Cycles per inference: {}", cycles_per_inference);
+    println!("Inferences per second (1GHz): {}", inferences_per_second);
+
+    // Performance classification
+    println!("Performance classification:");
+    if cycles_per_inference < 100_000 {
+        println!("Excellent performance");
+    } else if cycles_per_inference < 500_000 {
+        println!("Good performance");
+    } else if cycles_per_inference < 2_000_000 {
+        println!("Moderate performance");
+    } else {
+        println!("Needs optimization");
+    }
+
+    // Performance analysis
+    let total_mac_operations =
+        BENCHMARK_ITERATIONS as u64 * ((784 * 256) + (256 * 128) + (128 * 10)) as u64;
+    let macs_per_cycle = if total_cycles > 0 {
+        total_mac_operations as f64 / total_cycles as f64
+    } else {
+        0.0
+    };
+
+    println!("Total MAC operations: {}", total_mac_operations);
+    println!("MACs per cycle: {:.4}", macs_per_cycle);
+    println!("Note: Higher MACs/cycle indicates better vectorization");
+
+    if BENCHMARK_ITERATIONS > 0 {
+        println!("Benchmark completed successfully");
+    }
+
+    // Save baseline for comparison
+    println!("Use this as baseline for optimization comparisons");
+}
+
+/// Quick benchmark for development iterations
+#[allow(dead_code)]
+fn quick_benchmark(
+    fc1_weights: &[[i8; 784]; 256],
+    fc2_weights: &[[i8; 256]; 128],
+    fc3_weights: &[[i8; 128]; 10],
+    fc1_scale_q16: i32,
+    fc2_scale_q16: i32,
+    fc3_scale_q16: i32,
+) -> u32 {
+    let benchmark_image_data = include_bytes!("../test_images/test_image_00000.bin");
+    let (image_data, _) = parse_image_binary(benchmark_image_data);
+
+    let start_cycles = read_cycle_counter();
+
+    for _ in 0..10 {
+        let _ = mnist_inference_pure_int8(
+            fc1_weights,
+            fc2_weights,
+            fc3_weights,
+            &image_data,
+            fc1_scale_q16,
+            fc2_scale_q16,
+            fc3_scale_q16,
+        );
+    }
+
+    let end_cycles = read_cycle_counter();
+    (end_cycles - start_cycles) / 10
 }
