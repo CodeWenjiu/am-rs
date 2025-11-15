@@ -153,16 +153,12 @@ fn normalize_input_pure_int8(input: &[u8]) -> Vec<i8> {
     const SCALE_Q16: i32 = 257; // 2/255 * 32768 ≈ 257
     const OFFSET_Q16: i32 = 32768; // 1 * 32768
 
-    // Use explicit loop with hints for better vectorization
+    // Simple loop that LLVM can optimize well
     let mut result = Vec::with_capacity(input.len());
-
-    // LLVM hint: this loop can be vectorized
-    for i in 0..input.len() {
-        let pixel = input[i];
+    for &pixel in input {
         let temp = ((pixel as i32 * SCALE_Q16 - OFFSET_Q16) >> 8) as i32;
         result.push(temp.clamp(-128, 127) as i8);
     }
-
     result
 }
 
@@ -177,11 +173,9 @@ fn int8_matmul_symmetric<const ROWS: usize, const COLS: usize>(
 ) -> Vec<i32> {
     let mut output = Vec::with_capacity(ROWS);
 
-    // Use simple loops that LLVM can auto-vectorize effectively
+    // Simple nested loops - let LLVM handle vectorization
     for i in 0..ROWS {
         let mut sum: i32 = 0;
-
-        // LLVM hint: this inner loop can be vectorized
         for j in 0..COLS {
             sum += weights[i][j] as i32 * input[j] as i32;
         }
@@ -200,13 +194,12 @@ fn int8_matmul_symmetric<const ROWS: usize, const COLS: usize>(
 /// ReLU6 provides better quantization behavior than standard ReLU
 /// by limiting the activation range
 fn relu6_int8(data: &mut [i8]) {
-    // Use explicit indexing for better vectorization
-    // LLVM hint: this loop can be vectorized
-    for i in 0..data.len() {
-        if data[i] < 0 {
-            data[i] = 0;
-        } else if data[i] > 6 {
-            data[i] = 6;
+    // Simple loop - let LLVM handle vectorization
+    for val in data.iter_mut() {
+        if *val < 0 {
+            *val = 0;
+        } else if *val > 6 {
+            *val = 6;
         }
     }
 }
@@ -232,14 +225,11 @@ fn int32_to_int8_with_scaling(input: &[i32]) -> Vec<i8> {
         shift += 1;
     }
 
-    // Use explicit loop for better vectorization
+    // Simple loop - let LLVM handle vectorization
     let mut result = Vec::with_capacity(input.len());
-
-    // LLVM hint: this loop can be vectorized
-    for i in 0..input.len() {
-        result.push((input[i] >> shift).clamp(-127, 127) as i8);
+    for &x in input {
+        result.push((x >> shift).clamp(-127, 127) as i8);
     }
-
     result
 }
 
