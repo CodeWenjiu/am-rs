@@ -5,10 +5,8 @@
 
 #![no_std]
 
-macros::mod_flat!(heap, stdio);
-
-// Re-export stdio types and functions
-pub use stdio::{Stdin, Stdout, stdin, stdout};
+macros::mod_pub!(io);
+macros::mod_flat!(heap, r#macro);
 
 /// Common binInit macro for all platforms
 ///
@@ -79,12 +77,11 @@ macro_rules! entry {
 #[macro_export]
 macro_rules! preclude {
     () => {
-        extern crate alloc;
-
         // Import print macros from runtime crate
-        use runtime::{print, println, stdin};
+        use runtime::{self as std, print, println};
 
         // Import common alloc types
+        extern crate alloc;
         use alloc::{boxed::Box, rc::Rc, string::String, vec, vec::Vec};
     };
 }

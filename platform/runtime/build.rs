@@ -16,7 +16,8 @@ fn main() {
     match enabled_platforms.len() {
         0 => {
             let target = env::var("TARGET").expect("TARGET environment variable not set");
-            if target != "x86_64-unknown-linux-gnu" {
+            let target_prefix = target.split('-').next().unwrap();
+            if target_prefix != "x86_64" {
                 eprintln!("ERROR: No platform feature enabled!");
                 eprintln!("Available platforms: {}", platforms.join(", "));
                 eprintln!("Please enable exactly one platform feature.");

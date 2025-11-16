@@ -50,9 +50,7 @@ fn get_platform() -> Platform {
     };
 
     match Platform::from_str(platform_env) {
-        Some(platform) => {
-            platform
-        }
+        Some(platform) => platform,
         None => {
             println!(
                 "cargo:warning=Unknown platform '{}', defaulting to nemu",
@@ -74,12 +72,7 @@ pub fn link_helper() {
     let platform = get_platform();
 
     // Get the target triple
-    let target = env::var("TARGET").expect("TARGET environment variable not set");
-    if target == "x86_64-unknown-linux-gnu" {
-        // Skip linking for host target
-        println!("cargo:warning=Host target detected, skipping linker script configuration");
-        return;
-    }
+    let target = env::var("TARGET").unwrap_or("riscv32im-nemu".into());
 
     // Extract the target prefix (part before the first '-')
     // e.g., "riscv32i-unknown-none-elf" -> "riscv32i"
@@ -91,6 +84,12 @@ pub fn link_helper() {
         }
     };
 
+    if target_prefix == "x86_64" {
+        // Skip linking for host target
+        println!("cargo:warning=Host target detected, skipping linker script configuration");
+        return;
+    }
+
     // Get the workspace root (go up from bin/xxx to project root)
     let output = std::process::Command::new(env!("CARGO"))
         .arg("locate-project")
@@ -99,7 +98,10 @@ pub fn link_helper() {
         .output()
         .unwrap()
         .stdout;
-    let workspace_root = Path::new(std::str::from_utf8(&output).unwrap().trim()).parent().unwrap().to_path_buf();
+    let workspace_root = Path::new(std::str::from_utf8(&output).unwrap().trim())
+        .parent()
+        .unwrap()
+        .to_path_buf();
 
     // Construct linker script filename based on target prefix
     // e.g., "riscv32i" -> "riscv32i_link.x"

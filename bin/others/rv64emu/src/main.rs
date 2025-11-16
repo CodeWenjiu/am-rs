@@ -5,7 +5,6 @@ runtime::binInit!();
 
 runtime::entry!(main);
 
-use alloc::vec;
 use rv64emu::{
     rv64core::{
         bus::Bus,
@@ -14,6 +13,8 @@ use rv64emu::{
     rvsim::RVsim,
     tools::rc_refcell_new,
 };
+
+use std::io::stdin;
 
 // Import modules
 mod bin_file;
@@ -166,12 +167,12 @@ fn main() {
         // Handle UART output (TX FIFO -> console)
         while let Some(c) = uart_devices.tx_fifo.pop() {
             // Output character from emulated UART to our platform's console
-            runtime::putc(c);
+            print!("{c}");
         }
 
         // Handle UART input (console -> RX FIFO)
         // Use try_getc to check for input without blocking
-        if let Some(input_char) = runtime::stdin().try_getc() {
+        if let Some(input_char) = stdin().try_getc() {
             // Push received character to emulated UART's RX FIFO
             uart_devices.rx_fifo.push(input_char);
         }

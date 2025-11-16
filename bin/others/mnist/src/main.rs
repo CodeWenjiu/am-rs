@@ -1,13 +1,13 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(test), no_std, no_main)]
 
+#[cfg(not(test))]
 runtime::binInit!();
-
+#[cfg(not(test))]
 runtime::entry!(main);
 
 // Command line arguments simulation (for benchmark mode)
 // In a real embedded system, this would come from boot parameters or configuration
-static BENCHMARK_MODE: bool = true; // Set to true for benchmark-only mode
+static BENCHMARK_MODE: bool = false; // Set to true for benchmark-only mode
 
 // Benchmark configuration
 const BENCHMARK_ITERATIONS: usize = 1000;
@@ -16,10 +16,23 @@ const DETAILED_BENCHMARK_ITERATIONS: usize = 100;
 
 // RISC-V cycle counter access
 #[inline(always)]
-fn read_cycle_counter() -> u32 {
-    let cycles: u32;
+fn read_cycle_counter() -> usize {
+    let cycles: usize;
     unsafe {
+        #[cfg(not(test))]
         core::arch::asm!("rdcycle {}", out(reg) cycles);
+        #[cfg(test)]
+        {
+            let low: u32;
+            let high: u32;
+            core::arch::asm!(
+                "rdtsc",
+                out("eax") low,
+                out("edx") high,
+                options(nomem, nostack)
+            );
+            cycles = ((high as usize) << 32) | (low as usize);
+        }
     }
     cycles
 }
@@ -543,7 +556,7 @@ fn quick_benchmark(
     fc1_scale_q16: i32,
     fc2_scale_q16: i32,
     fc3_scale_q16: i32,
-) -> u32 {
+) -> usize {
     let benchmark_image_data = include_bytes!("../test_images/test_image_00000.bin");
     let (image_data, _) = parse_image_binary(benchmark_image_data);
 
@@ -563,4 +576,14 @@ fn quick_benchmark(
 
     let end_cycles = read_cycle_counter();
     (end_cycles - start_cycles) / 10
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::main;
+
+    #[test]
+    fn test_main() {
+        main();
+    }
 }

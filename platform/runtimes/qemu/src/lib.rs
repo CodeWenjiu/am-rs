@@ -6,18 +6,11 @@ pub mod exit;
 pub mod startup;
 pub mod stdio;
 
-// Re-export stdio items for convenience
-pub use stdio::{getc, putc, try_getc};
-
-// Re-export common runtime items from runtime-common
-pub use common::{
-    Stdin, Stdout, binInit, common_startup, entry, heap_init, preclude, print, println, stdin,
-    stdout,
-};
+pub use common::println;
 
 // Generate common startup code
 // Platform-specific _start is in startup.rs
-common_startup!();
+common::common_startup!();
 
 // Platform-specific panic handler
 #[cfg(not(test))]

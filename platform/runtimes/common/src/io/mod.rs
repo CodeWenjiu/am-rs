@@ -25,35 +25,6 @@ pub fn stdout() -> Stdout {
     Stdout
 }
 
-/// Print macro for formatted output
-///
-/// This macro prints formatted text to stdout using the platform-specific putc function.
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let _ = write!($crate::stdout(), $($arg)*);
-        }
-    };
-}
-
-/// Println macro for formatted output with newline
-///
-/// This macro prints formatted text to stdout with a newline using the platform-specific putc function.
-#[macro_export]
-macro_rules! println {
-    () => {
-        $crate::print!("\n")
-    };
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let _ = writeln!($crate::stdout(), $($arg)*);
-        }
-    };
-}
-
 /// Common Stdin implementation
 ///
 /// This struct provides Read-like functionality using platform-specific getc/try_getc functions.
@@ -62,6 +33,10 @@ macro_rules! println {
 /// - `try_getc() -> Option<u8>` - Non-blocking character read
 pub struct Stdin;
 
+pub enum Error {
+    WTF,
+}
+
 impl Stdin {
     /// Read a single character (blocking)
     ///
@@ -69,7 +44,7 @@ impl Stdin {
     ///
     /// # Returns
     /// * The received character byte
-    pub fn getc(&self) -> u8 {
+    pub fn read(&self) -> u8 {
         unsafe extern "Rust" {
             fn getc() -> u8;
         }
@@ -100,10 +75,10 @@ impl Stdin {
     ///
     /// # Returns
     /// * Number of bytes read (excluding newline)
-    pub fn read_line(&self, buffer: &mut alloc::string::String) -> usize {
+    pub fn read_line(&self, buffer: &mut alloc::string::String) -> Result<usize, Error> {
         let mut count = 0;
         loop {
-            let ch = self.getc();
+            let ch = self.read();
             count += 1;
 
             // Handle different line endings
@@ -123,7 +98,8 @@ impl Stdin {
 
             buffer.push(ch as char);
         }
-        count
+
+        Ok(count)
     }
 }
 
