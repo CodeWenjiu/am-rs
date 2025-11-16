@@ -586,4 +586,9 @@ mod tests {
     fn test_main() {
         main();
     }
+
+    #[test]
+    fn hello() {
+        println!("hello test!");
+    }
 }
