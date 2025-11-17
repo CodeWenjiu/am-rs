@@ -1,3 +1,4 @@
 /target
 disasm.txt
 .direnv
+bin/others/mnist/test_images
