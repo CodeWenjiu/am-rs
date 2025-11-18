@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "macros",
 
+    # runtime
     "platform/build-helper",
     "platform/runtime",
     "platform/runtimes/common",
@@ -23,6 +24,7 @@ members = [
     # That's insane
     "bin/others/rv64emu",
     "bin/others/mnist",
+    "bin/others/graphic",
 ]
 
 [workspace.dependencies]
