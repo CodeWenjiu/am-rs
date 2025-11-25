@@ -8,6 +8,14 @@
 macros::mod_pub!(io);
 macros::mod_flat!(heap, r#macro);
 
+#[macro_export]
+macro_rules! libInit {
+    () => {
+        // Import platform-specific prelude
+        $crate::preclude!();
+    };
+}
+
 /// Common binInit macro for all platforms
 ///
 /// This macro sets up the allocator and imports common preludes.
