@@ -7,421 +7,33 @@ runtime::entry!(main);
 
 macros::mod_flat!(inference);
 
-include!(concat!(env!("OUT_DIR"), "/embedded_images.rs"));
 // Command line arguments simulation (for benchmark mode)
 // In a real embedded system, this would come from boot parameters or configuration
 static BENCHMARK_MODE: bool = false; // Set to true for benchmark-only mode
 
-// Benchmark configuration
-const BENCHMARK_ITERATIONS: usize = 1000;
-const WARMUP_ITERATIONS: usize = 100;
-const DETAILED_BENCHMARK_ITERATIONS: usize = 100;
-
-// RISC-V cycle counter access
-#[inline(always)]
-fn read_cycle_counter() -> usize {
-    let cycles: usize;
-    unsafe {
-        #[cfg(not(test))]
-        core::arch::asm!("rdcycle {}", out(reg) cycles);
-        #[cfg(test)]
-        {
-            let low: u32;
-            let high: u32;
-            core::arch::asm!(
-                "rdtsc",
-                out("eax") low,
-                out("edx") high,
-                options(nomem, nostack)
-            );
-            cycles = ((high as usize) << 32) | (low as usize);
-        }
-    }
-    cycles
-}
-
-/// Run detailed performance analysis on individual functions
-fn detailed_performance_analysis(
-    fc1_weights: &[[i8; 784]; 256],
-    _fc2_weights: &[[i8; 256]; 128],
-    _fc3_weights: &[[i8; 128]; 10],
-    fc1_scale_q16: i32,
-    _fc2_scale_q16: i32,
-    _fc3_scale_q16: i32,
-) {
-    println!("=== DETAILED PERFORMANCE ANALYSIS ===");
-
-    let benchmark_image_data = EMBEDDED_TEST_IMAGES[0];
-    let (image_data, _) = parse_image_binary(benchmark_image_data);
-    let normalized_input = normalize_and_quantize_input(&image_data);
-
-    // Benchmark individual components
-    let mut total_cycles: u64 = 0;
-
-    // Benchmark normalize_input_pure_int8
-    let start = read_cycle_counter();
-    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
-        let _ = normalize_and_quantize_input(&image_data);
-    }
-    let end = read_cycle_counter();
-    let norm_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
-    println!("normalize_input_pure_int8: {} cycles/call", norm_cycles);
-    total_cycles += norm_cycles;
-
-    // Benchmark FC1 matrix multiplication
-    let start = read_cycle_counter();
-    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
-        let _ = int8_matmul_symmetric::<256, 784>(fc1_weights, &normalized_input, fc1_scale_q16);
-    }
-    let end = read_cycle_counter();
-    let fc1_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
-    println!("FC1 matmul (256x784): {} cycles/call", fc1_cycles);
-    total_cycles += fc1_cycles;
-
-    // Benchmark int32_to_int8_with_scaling
-    let fc1_output =
-        int8_matmul_symmetric::<256, 784>(fc1_weights, &normalized_input, fc1_scale_q16);
-    let start = read_cycle_counter();
-    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
-        let _ = int32_to_int8_with_scaling(&fc1_output);
-    }
-    let end = read_cycle_counter();
-    let scale_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
-    println!("int32_to_int8_with_scaling: {} cycles/call", scale_cycles);
-    total_cycles += scale_cycles;
-
-    // Benchmark relu6_int8
-    let mut fc1_activations = int32_to_int8_with_scaling(&fc1_output);
-    let start = read_cycle_counter();
-    for _ in 0..DETAILED_BENCHMARK_ITERATIONS {
-        relu_int8(&mut fc1_activations);
-    }
-    let end = read_cycle_counter();
-    let relu_cycles = ((end - start) as u64) / DETAILED_BENCHMARK_ITERATIONS as u64;
-    println!("relu6_int8: {} cycles/call", relu_cycles);
-    total_cycles += relu_cycles;
-
-    println!("Estimated total cycles per inference: {}", total_cycles);
-    println!("Breakdown:");
-    println!(
-        "  - Input normalization: {:.1}%",
-        (norm_cycles * 100) as f64 / total_cycles as f64
-    );
-    println!(
-        "  - FC1 matmul: {:.1}%",
-        (fc1_cycles * 100) as f64 / total_cycles as f64
-    );
-    println!(
-        "  - Scaling: {:.1}%",
-        (scale_cycles * 100) as f64 / total_cycles as f64
-    );
-    println!(
-        "  - Activation: {:.1}%",
-        (relu_cycles * 100) as f64 / total_cycles as f64
-    );
-}
-
-// Compile-time weight parsing using const generics
-const fn parse_weight_binary_const<const ROWS: usize, const COLS: usize>(
-    data: &'static [u8],
-) -> ([[i8; COLS]; ROWS], f32) {
-    // Read scale at compile time
-    let scale = f32::from_le_bytes([data[8], data[9], data[10], data[11]]);
-
-    let mut weights = [[0i8; COLS]; ROWS];
-    let mut i = 0;
-    while i < ROWS {
-        let mut j = 0;
-        let start = 12 + i * COLS;
-        while j < COLS {
-            weights[i][j] = data[start + j] as i8;
-            j += 1;
-        }
-        i += 1;
-    }
-
-    (weights, scale)
-}
-
-fn parse_image_binary(data: &[u8]) -> (Vec<u8>, u8) {
-    // Read true label
-    let true_label = data[8];
-
-    // Read image data
-    let image_data: Vec<u8> = data[9..].to_vec();
-
-    (image_data, true_label)
-}
-
-/// Macro to convert float scale to Q16 fixed-point
-macro_rules! scale_to_q16 {
-    ($scale:expr) => {
-        (($scale * (1 << Q16_SHIFT) as f32) as i32)
-    };
-}
-
 fn main() {
-    // Compile-time weight parsing with known dimensions
-    const FC1_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc1_weight.bin");
-    const FC2_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc2_weight.bin");
-    const FC3_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc3_weight.bin");
-
-    // Parse weights at compile time
-    const FC1_PARSED: ([[i8; 784]; 256], f32) =
-        parse_weight_binary_const::<256, 784>(FC1_WEIGHT_DATA);
-    const FC2_PARSED: ([[i8; 256]; 128], f32) =
-        parse_weight_binary_const::<128, 256>(FC2_WEIGHT_DATA);
-    const FC3_PARSED: ([[i8; 128]; 10], f32) =
-        parse_weight_binary_const::<10, 128>(FC3_WEIGHT_DATA);
-
-    let (fc1_weights, fc1_scale) = FC1_PARSED;
-    let (fc2_weights, fc2_scale) = FC2_PARSED;
-    let (fc3_weights, fc3_scale) = FC3_PARSED;
-
-    println!("Model weights loaded successfully!");
-    println!(
-        "FC1: {}x{}, scale: {:.6}",
-        fc1_weights.len(),
-        fc1_weights[0].len(),
-        fc1_scale
-    );
-    println!(
-        "FC2: {}x{}, scale: {:.6}",
-        fc2_weights.len(),
-        fc2_weights[0].len(),
-        fc2_scale
-    );
-    println!(
-        "FC3: {}x{}, scale: {:.6}\n",
-        fc3_weights.len(),
-        fc3_weights[0].len(),
-        fc3_scale
-    );
-
-    let fc1_scale_q16 = scale_to_q16!(fc1_scale);
-    let fc2_scale_q16 = scale_to_q16!(fc2_scale);
-    let fc3_scale_q16 = scale_to_q16!(fc3_scale);
-
-    // Print quantization information
-    println!("Quantization Scales (Fixed Point):");
-    println!("  FC1_SCALE: {:.6} -> Q16: {}", fc1_scale, fc1_scale_q16);
-    println!("  FC2_SCALE: {:.6} -> Q16: {}", fc2_scale, fc2_scale_q16);
-    println!("  FC3_SCALE: {:.6} -> Q16: {}", fc3_scale, fc3_scale_q16);
-    println!();
+    let infer = Inference::new();
 
     // Run benchmarks based on mode
     if BENCHMARK_MODE {
         // Benchmark-only mode - skip accuracy testing
         println!("=== BENCHMARK-ONLY MODE ===");
 
-        // Run detailed performance analysis
-        detailed_performance_analysis(
-            &fc1_weights,
-            &fc2_weights,
-            &fc3_weights,
-            fc1_scale_q16,
-            fc2_scale_q16,
-            fc3_scale_q16,
-        );
+        infer.detailed_performance_analysis();
         println!();
 
         // Run full inference benchmark
-        run_benchmark(
-            &fc1_weights,
-            &fc2_weights,
-            &fc3_weights,
-            fc1_scale_q16,
-            fc2_scale_q16,
-            fc3_scale_q16,
-        );
+        infer.run_benchmark();
 
         return; // Exit after benchmarks
     } else {
         // Normal mode - run quick benchmark then accuracy test
         println!("=== QUICK BENCHMARK ===");
-        run_benchmark(
-            &fc1_weights,
-            &fc2_weights,
-            &fc3_weights,
-            fc1_scale_q16,
-            fc2_scale_q16,
-            fc3_scale_q16,
-        );
+        infer.run_benchmark();
         println!();
     }
 
-    let test_images_data = EMBEDDED_TEST_IMAGES;
-
-    let total_images = test_images_data.len();
-    let mut correct_predictions = 0;
-
-    for (img_idx, image_data_bytes) in test_images_data.iter().enumerate() {
-        println!("=== Test Image {} ===", img_idx + 1);
-
-        let (image_data, true_label) = parse_image_binary(*image_data_bytes);
-        println!("True label: {}", true_label);
-
-        // Run pure INT8 inference with embedded weights
-        let predicted_digit = mnist_inference_pure_int8(
-            &fc1_weights,
-            &fc2_weights,
-            &fc3_weights,
-            &image_data,
-            fc1_scale_q16,
-            fc2_scale_q16,
-            fc3_scale_q16,
-        );
-
-        println!("Predicted:  {}", predicted_digit);
-
-        if predicted_digit == true_label as usize {
-            println!("✓ CORRECT PREDICTION!");
-            correct_predictions += 1;
-        } else {
-            println!("❌ WRONG PREDICTION!");
-        }
-
-        println!();
-    }
-
-    // Summary
-    println!("=== FINAL RESULTS ===");
-    println!("Total images: {}", total_images);
-    println!("Correct predictions: {}", correct_predictions);
-    println!(
-        "Accuracy: {:.2}%",
-        (correct_predictions as f32 / total_images as f32) * 100.0
-    );
-}
-
-/// Benchmark function to measure inference performance
-fn run_benchmark(
-    fc1_weights: &[[i8; 784]; 256],
-    fc2_weights: &[[i8; 256]; 128],
-    fc3_weights: &[[i8; 128]; 10],
-    fc1_scale_q16: i32,
-    fc2_scale_q16: i32,
-    fc3_scale_q16: i32,
-) {
-    println!("=== BENCHMARK MODE ===");
-    println!("Warmup iterations: {}", WARMUP_ITERATIONS);
-    println!("Benchmark iterations: {}", BENCHMARK_ITERATIONS);
-
-    // Use a representative test image for benchmarking
-    let benchmark_image_data = EMBEDDED_TEST_IMAGES[0];
-    let (image_data, _) = parse_image_binary(benchmark_image_data);
-
-    // Warmup phase
-    println!("Running warmup...");
-    for _ in 0..WARMUP_ITERATIONS {
-        let _ = mnist_inference_pure_int8(
-            fc1_weights,
-            fc2_weights,
-            fc3_weights,
-            &image_data,
-            fc1_scale_q16,
-            fc2_scale_q16,
-            fc3_scale_q16,
-        );
-    }
-
-    // Benchmark phase with cycle counting
-    println!("Running benchmark with cycle counting...");
-
-    let start_cycles = read_cycle_counter();
-
-    for _ in 0..BENCHMARK_ITERATIONS {
-        let _ = mnist_inference_pure_int8(
-            fc1_weights,
-            fc2_weights,
-            fc3_weights,
-            &image_data,
-            fc1_scale_q16,
-            fc2_scale_q16,
-            fc3_scale_q16,
-        );
-    }
-
-    let end_cycles = read_cycle_counter();
-    let total_cycles = (end_cycles - start_cycles) as u64;
-
-    // Calculate metrics
-    let cycles_per_inference = total_cycles / BENCHMARK_ITERATIONS as u64;
-    let inferences_per_second = if total_cycles > 0 {
-        // Assuming 1GHz clock for calculation
-        (1_000_000_000u64 * BENCHMARK_ITERATIONS as u64) / total_cycles
-    } else {
-        0
-    };
-
-    println!("=== BENCHMARK RESULTS ===");
-    println!("Total cycles measured: {}", total_cycles);
-    println!("Iterations completed: {}", BENCHMARK_ITERATIONS);
-    println!("Cycles per inference: {}", cycles_per_inference);
-    println!("Inferences per second (1GHz): {}", inferences_per_second);
-
-    // Performance classification
-    println!("Performance classification:");
-    if cycles_per_inference < 100_000 {
-        println!("Excellent performance");
-    } else if cycles_per_inference < 500_000 {
-        println!("Good performance");
-    } else if cycles_per_inference < 2_000_000 {
-        println!("Moderate performance");
-    } else {
-        println!("Needs optimization");
-    }
-
-    // Performance analysis
-    let total_mac_operations =
-        BENCHMARK_ITERATIONS as u64 * ((784 * 256) + (256 * 128) + (128 * 10)) as u64;
-    let macs_per_cycle = if total_cycles > 0 {
-        total_mac_operations as f64 / total_cycles as f64
-    } else {
-        0.0
-    };
-
-    println!("Total MAC operations: {}", total_mac_operations);
-    println!("MACs per cycle: {:.4}", macs_per_cycle);
-    println!("Note: Higher MACs/cycle indicates better vectorization");
-
-    if BENCHMARK_ITERATIONS > 0 {
-        println!("Benchmark completed successfully");
-    }
-
-    // Save baseline for comparison
-    println!("Use this as baseline for optimization comparisons");
-}
-
-/// Quick benchmark for development iterations
-#[allow(dead_code)]
-fn quick_benchmark(
-    fc1_weights: &[[i8; 784]; 256],
-    fc2_weights: &[[i8; 256]; 128],
-    fc3_weights: &[[i8; 128]; 10],
-    fc1_scale_q16: i32,
-    fc2_scale_q16: i32,
-    fc3_scale_q16: i32,
-) -> usize {
-    let benchmark_image_data = EMBEDDED_TEST_IMAGES[0];
-    let (image_data, _) = parse_image_binary(benchmark_image_data);
-
-    let start_cycles = read_cycle_counter();
-
-    for _ in 0..10 {
-        let _ = mnist_inference_pure_int8(
-            fc1_weights,
-            fc2_weights,
-            fc3_weights,
-            &image_data,
-            fc1_scale_q16,
-            fc2_scale_q16,
-            fc3_scale_q16,
-        );
-    }
-
-    let end_cycles = read_cycle_counter();
-    (end_cycles - start_cycles) / 10
+    infer.test();
 }
 
 #[cfg(test)]
@@ -433,273 +45,458 @@ mod tests {
         main();
     }
 
+    use eframe::egui;
+
+    const WIDTH: usize = 28;
+    const HEIGHT: usize = 28;
+
     #[test]
-    #[ignore]
-    fn mnist_gui() {
-        use fltk::{
-            app, button::Button, draw, prelude::*, text::TextDisplay, text::TextEditor,
-            window::Window,
+    fn mnist_get() -> Result<(), eframe::Error> {
+        let options = eframe::NativeOptions {
+            viewport: egui::ViewportBuilder::default()
+                .with_inner_size([800.0, 600.0]) // A good default size.
+                .with_min_inner_size([450.0, 350.0]) // A sensible minimum size.
+                .with_resizable(true),
+            ..Default::default()
         };
-        use std::cell::RefCell;
-        use std::rc::Rc;
 
-        const GRID_WIDTH: usize = 28;
-        const GRID_HEIGHT: usize = 28;
-        const PIXEL_SIZE: i32 = 20;
-        const CANVAS_SIZE: i32 = PIXEL_SIZE as i32 * GRID_WIDTH as i32;
-
-        let app = app::App::default();
-        let mut wind = Window::default()
-            .with_size(900, 650)
-            .with_label("MNIST Digit Recognizer - Draw a Digit!");
-
-        // Canvas area (left side)
-        let mut canvas = fltk::frame::Frame::default()
-            .with_size(CANVAS_SIZE, CANVAS_SIZE)
-            .with_pos(10, 10);
-
-        let mut result_box = TextDisplay::default()
-            .with_size(280, 150)
-            .with_pos(CANVAS_SIZE + 20, 10);
-        result_box.set_buffer(fltk::text::TextBuffer::default());
-
-        let mut recognize_btn = Button::default()
-            .with_size(100, 40)
-            .with_pos(CANVAS_SIZE + 20, 170)
-            .with_label("Recognize");
-
-        let mut clear_btn = Button::default()
-            .with_size(100, 40)
-            .with_pos(CANVAS_SIZE + 130, 170)
-            .with_label("Clear");
-
-        let mut save_btn = Button::default()
-            .with_size(100, 40)
-            .with_pos(CANVAS_SIZE + 20, 220)
-            .with_label("Save Image");
-
-        let mut label_input = TextEditor::default()
-            .with_size(100, 30)
-            .with_pos(CANVAS_SIZE + 20, 270);
-        label_input.set_buffer(fltk::text::TextBuffer::default());
-        label_input.buffer().unwrap().set_text("0");
-
-        let mut instr = TextDisplay::default()
-            .with_size(260, 150)
-            .with_pos(CANVAS_SIZE + 20, 320);
-        let mut instr_buf = fltk::text::TextBuffer::default();
-        instr_buf.set_text(
-            "Instructions:\n1. Draw digit on canvas\n2. Click Recognize\n3. Set label (0-9)\n4. Click Save Image",
-        );
-        instr.set_buffer(instr_buf);
-
-        wind.end();
-        wind.show();
-
-        const FC1_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc1_weight.bin");
-        const FC2_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc2_weight.bin");
-        const FC3_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc3_weight.bin");
-
-        const FC1_PARSED: ([[i8; 784]; 256], f32) =
-            parse_weight_binary_const::<256, 784>(FC1_WEIGHT_DATA);
-        const FC2_PARSED: ([[i8; 256]; 128], f32) =
-            parse_weight_binary_const::<128, 256>(FC2_WEIGHT_DATA);
-        const FC3_PARSED: ([[i8; 128]; 10], f32) =
-            parse_weight_binary_const::<10, 128>(FC3_WEIGHT_DATA);
-
-        let (fc1_weights, fc1_scale) = FC1_PARSED;
-        let (fc2_weights, fc2_scale) = FC2_PARSED;
-        let (fc3_weights, fc3_scale) = FC3_PARSED;
-
-        let fc1_scale_q16 = scale_to_q16!(fc1_scale);
-        let fc2_scale_q16 = scale_to_q16!(fc2_scale);
-        let fc3_scale_q16 = scale_to_q16!(fc3_scale);
-
-        println!("MNIST model loaded!");
-
-        let pixel_buffer = Rc::new(RefCell::new(vec![0u8; GRID_WIDTH * GRID_HEIGHT]));
-        let drawing = Rc::new(RefCell::new(false));
-
-        // Drawing callback
-        let pb_draw = pixel_buffer.clone();
-        canvas.draw({
-            let pb = pb_draw.clone();
-            move |_| {
-                draw::set_draw_color(fltk::enums::Color::White);
-                draw::draw_rectf(10, 10, CANVAS_SIZE, CANVAS_SIZE);
-
-                let pixels = pb.borrow();
-                for y in 0..GRID_HEIGHT {
-                    for x in 0..GRID_WIDTH {
-                        let pixel = pixels[y * GRID_WIDTH + x];
-                        let gray = 255u32.saturating_sub(pixel as u32) as u8;
-                        draw::set_draw_color(fltk::enums::Color::from_rgb(gray, gray, gray));
-                        draw::draw_rectf(
-                            10 + (x as i32 * PIXEL_SIZE),
-                            10 + (y as i32 * PIXEL_SIZE),
-                            PIXEL_SIZE,
-                            PIXEL_SIZE,
-                        );
-
-                        draw::set_draw_color(fltk::enums::Color::Light1);
-                        draw::draw_rect(
-                            10 + (x as i32 * PIXEL_SIZE),
-                            10 + (y as i32 * PIXEL_SIZE),
-                            PIXEL_SIZE,
-                            PIXEL_SIZE,
-                        );
-                    }
-                }
-            }
-        });
-
-        // Mouse event handling
-        let pb_handle = pixel_buffer.clone();
-        let dr_handle = drawing.clone();
-        canvas.handle({
-            let pb = pb_handle.clone();
-            let dr = dr_handle.clone();
-            move |w, ev| match ev {
-                fltk::enums::Event::Push => {
-                    *dr.borrow_mut() = true;
-                    true
-                }
-                fltk::enums::Event::Released => {
-                    *dr.borrow_mut() = false;
-                    true
-                }
-                fltk::enums::Event::Drag => {
-                    if *dr.borrow() {
-                        let (mx, my) = app::event_coords();
-                        let x = ((mx - 10) / PIXEL_SIZE) as usize;
-                        let y = ((my - 10) / PIXEL_SIZE) as usize;
-
-                        if x < GRID_WIDTH && y < GRID_HEIGHT {
-                            let mut pixels = pb.borrow_mut();
-                            // Draw with brush (3x3 area)
-                            for dy in -1..=1 {
-                                for dx in -1..=1 {
-                                    let nx = (x as i32 + dx) as usize;
-                                    let ny = (y as i32 + dy) as usize;
-                                    if nx < GRID_WIDTH && ny < GRID_HEIGHT {
-                                        let idx = ny * GRID_WIDTH + nx;
-                                        let dist_sq = (dx * dx + dy * dy) as f32;
-                                        let intensity =
-                                            ((180.0 * (1.0 - dist_sq / 2.0)).max(0.0)) as u8;
-                                        pixels[idx] = pixels[idx].saturating_add(intensity);
-                                    }
-                                }
-                            }
-                            drop(pixels);
-                            w.redraw();
-                        }
-                    }
-                    true
-                }
-                _ => false,
-            }
-        });
-
-        let pb_rec = pixel_buffer.clone();
-        recognize_btn.set_callback({
-            let result_box = result_box.clone();
-            move |_| {
-                let pixels = pb_rec.borrow().clone();
-                let prediction = mnist_inference_pure_int8(
-                    &fc1_weights,
-                    &fc2_weights,
-                    &fc3_weights,
-                    &pixels,
-                    fc1_scale_q16,
-                    fc2_scale_q16,
-                    fc3_scale_q16,
-                );
-
-                let mut buf = result_box.buffer().unwrap();
-                buf.set_text(&format!(
-                    "Predicted Digit:\n\n    {}\n\nConfident!",
-                    prediction
-                ));
-            }
-        });
-
-        let pb_clr = pixel_buffer.clone();
-        clear_btn.set_callback({
-            let mut canvas = canvas.clone();
-            move |_| {
-                let mut pixels = pb_clr.borrow_mut();
-                for p in pixels.iter_mut() {
-                    *p = 0;
-                }
-                drop(pixels);
-                canvas.redraw();
-            }
-        });
-
-        let pb_save = pixel_buffer.clone();
-        save_btn.set_callback({
-            let label_input = label_input.clone();
-            move |_| {
-                let label_text = label_input.buffer().unwrap().text();
-                let label = label_text.trim().parse::<u8>().unwrap_or(0);
-
-                let pixels = pb_save.borrow().clone();
-                save_mnist_image(&pixels, label);
-
-                let mut buf = label_input.buffer().unwrap();
-                buf.set_text("Saved!");
-            }
-        });
-
-        app.run().unwrap();
+        // Run the egui application.
+        eframe::run_native(
+            "MNIST Drawer",
+            options,
+            Box::new(|_cc| Ok(Box::<MnistAPP>::default())),
+        )
     }
 
-    fn save_mnist_image(pixels: &[u8], label: u8) {
-        use std::fs::{create_dir_all, File};
-        use std::io::Write;
-        use std::path::Path;
+    struct MnistAPP {
+        pixels: Vec<u8>,
+        texture: Option<egui::TextureHandle>,
+        pixels_dirty: bool,
+        brush_radius: f32,
+        recognized_digit: u8,
+    }
 
-        let _ = create_dir_all("test_images");
-
-        let mut index = 0;
-        loop {
-            let bin_path = format!("test_images/saved_image_{:05}.bin", index);
-            let txt_path = format!("test_images/saved_image_{:05}.txt", index);
-
-            if !Path::new(&bin_path).exists() && !Path::new(&txt_path).exists() {
-                let mut bin_data = vec![0u8; pixels.len() + 9];
-
-                bin_data[0..4].copy_from_slice(&(28u32).to_le_bytes());
-                bin_data[4..8].copy_from_slice(&(28u32).to_le_bytes());
-                bin_data[8] = label;
-                bin_data[9..].copy_from_slice(pixels);
-
-                if let Ok(mut file) = File::create(&bin_path) {
-                    let _ = file.write_all(&bin_data);
-                    println!("Saved binary: {}", bin_path);
-                }
-
-                let mut txt_content = format!(
-                    "Image Index: {}\nTrue Label: {}\nImage Data (28x28):\n",
-                    index, label
-                );
-
-                for y in 0..28 {
-                    for x in 0..28 {
-                        let pixel = pixels[y * 28 + x];
-                        txt_content.push_str(&format!("{:3} ", pixel));
-                    }
-                    txt_content.push('\n');
-                }
-
-                if let Ok(mut file) = File::create(&txt_path) {
-                    let _ = file.write_all(txt_content.as_bytes());
-                    println!("Saved text: {}", txt_path);
-                }
-
-                break;
+    impl Default for MnistAPP {
+        fn default() -> Self {
+            Self {
+                pixels: vec![0; WIDTH * HEIGHT],
+                texture: None,
+                pixels_dirty: true,
+                brush_radius: 1.5,
+                recognized_digit: 0,
             }
-            index += 1;
         }
     }
+
+    impl eframe::App for MnistAPP {
+        fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+            self.ui_side_panel(ctx);
+            self.ui_central_panel(ctx);
+        }
+    }
+
+    impl MnistAPP {
+        fn ui_side_panel(&mut self, ctx: &egui::Context) {
+            egui::SidePanel::right("side_panel")
+                .min_width(150.0)
+                .show(ctx, |ui| {
+                    ui.heading("Controls");
+                    ui.separator();
+
+                    if ui.button("Clear Canvas").clicked() {
+                        self.clear_canvas();
+                    }
+
+                    if ui.button("Save (dummy)").clicked() {
+                        println!("'Save' button clicked. Implement saving logic here.");
+                    }
+
+                    ui.separator();
+                    ui.add(
+                        egui::Slider::new(&mut self.brush_radius, 0.5..=5.0).text("Brush Radius"),
+                    );
+                    ui.separator();
+
+                    ui.heading("Recognition");
+                    let mut digit_str = self.recognized_digit.to_string();
+                    ui.label("Recognized as:");
+                    ui.add(egui::TextEdit::singleline(&mut digit_str).interactive(false));
+                });
+        }
+
+        fn ui_central_panel(&mut self, ctx: &egui::Context) {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                ui.heading("MNIST Digit Drawer");
+                ui.label("Draw a single digit (0-9) in the black box.");
+
+                self.ui_canvas(ui);
+            });
+        }
+
+        fn ui_canvas(&mut self, ui: &mut egui::Ui) {
+            let canvas_size = egui::Vec2::splat(ui.available_size().min_elem());
+            let (response, painter) = ui.allocate_painter(canvas_size, egui::Sense::drag());
+
+            painter.rect_filled(response.rect, 0.0, egui::Color32::BLACK);
+
+            let texture = self.get_texture(ui);
+            painter.image(
+                texture.id(),
+                response.rect,
+                egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                egui::Color32::WHITE,
+            );
+
+            self.handle_canvas_interaction(&response);
+        }
+
+        fn get_texture(&mut self, ui: &mut egui::Ui) -> &egui::TextureHandle {
+            let texture_options = egui::TextureOptions::NEAREST;
+
+            if self.texture.is_none() {
+                let image = egui::ColorImage::from_gray([WIDTH, HEIGHT], &self.pixels);
+                self.texture = Some(ui.ctx().load_texture(
+                    "canvas-texture",
+                    image,
+                    texture_options,
+                ));
+            }
+
+            if self.pixels_dirty {
+                if let Some(texture) = &mut self.texture {
+                    let image = egui::ColorImage::from_gray([WIDTH, HEIGHT], &self.pixels);
+                    texture.set(image, texture_options);
+                    self.pixels_dirty = false;
+                }
+            }
+
+            self.texture.as_ref().unwrap()
+        }
+
+        fn handle_canvas_interaction(&mut self, response: &egui::Response) {
+            if response.dragged() {
+                if let Some(pos) = response.interact_pointer_pos() {
+                    self.paint_stroke(pos, response.rect);
+                }
+            }
+
+            if response.drag_stopped() {
+                self.recognized_digit = self.recognize();
+            }
+        }
+
+        fn paint_stroke(&mut self, pointer_pos: egui::Pos2, canvas_rect: egui::Rect) {
+            let rect_pos = pointer_pos - canvas_rect.min;
+            let grid_x = rect_pos.x * (WIDTH as f32) / canvas_rect.width();
+            let grid_y = rect_pos.y * (HEIGHT as f32) / canvas_rect.height();
+            let radius_sq = self.brush_radius * self.brush_radius;
+
+            for y in 0..HEIGHT {
+                for x in 0..WIDTH {
+                    let dx = x as f32 - grid_x;
+                    let dy = y as f32 - grid_y;
+                    let dist_sq = dx * dx + dy * dy;
+
+                    if dist_sq < radius_sq {
+                        let intensity_factor = 1.0 - (dist_sq / radius_sq);
+                        let intensity_to_add = (255.0 * intensity_factor) as u16;
+
+                        let idx = y * WIDTH + x;
+                        let current_val = self.pixels[idx] as u16;
+                        let new_val = (current_val + intensity_to_add).min(255) as u8;
+                        if self.pixels[idx] != new_val {
+                            self.pixels[idx] = new_val;
+                            self.pixels_dirty = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        fn clear_canvas(&mut self) {
+            self.pixels.fill(0);
+            self.pixels_dirty = true;
+            self.recognized_digit = self.recognize();
+        }
+
+        fn recognize(&self) -> u8 {
+            if self.pixels.iter().all(|&p| p == 0) {
+                return 0; // Return 0 for an empty canvas.
+            }
+
+            // In a real application, you would pass `&self.pixels` to a trained model.
+            // For now, it's just a dummy function.
+            0
+        }
+    }
+
+    // #[test]
+    // #[ignore]
+    // fn mnist_gui() {
+    //     use fltk::{
+    //         app, button::Button, draw, prelude::*, text::TextDisplay, text::TextEditor,
+    //         window::Window,
+    //     };
+    //     use std::cell::RefCell;
+    //     use std::rc::Rc;
+
+    //     const GRID_WIDTH: usize = 28;
+    //     const GRID_HEIGHT: usize = 28;
+    //     const PIXEL_SIZE: i32 = 20;
+    //     const CANVAS_SIZE: i32 = PIXEL_SIZE as i32 * GRID_WIDTH as i32;
+
+    //     let app = app::App::default();
+    //     let mut wind = Window::default()
+    //         .with_size(900, 650)
+    //         .with_label("MNIST Digit Recognizer - Draw a Digit!");
+
+    //     // Canvas area (left side)
+    //     let mut canvas = fltk::frame::Frame::default()
+    //         .with_size(CANVAS_SIZE, CANVAS_SIZE)
+    //         .with_pos(10, 10);
+
+    //     let mut result_box = TextDisplay::default()
+    //         .with_size(280, 150)
+    //         .with_pos(CANVAS_SIZE + 20, 10);
+    //     result_box.set_buffer(fltk::text::TextBuffer::default());
+
+    //     let mut recognize_btn = Button::default()
+    //         .with_size(100, 40)
+    //         .with_pos(CANVAS_SIZE + 20, 170)
+    //         .with_label("Recognize");
+
+    //     let mut clear_btn = Button::default()
+    //         .with_size(100, 40)
+    //         .with_pos(CANVAS_SIZE + 130, 170)
+    //         .with_label("Clear");
+
+    //     let mut save_btn = Button::default()
+    //         .with_size(100, 40)
+    //         .with_pos(CANVAS_SIZE + 20, 220)
+    //         .with_label("Save Image");
+
+    //     let mut label_input = TextEditor::default()
+    //         .with_size(100, 30)
+    //         .with_pos(CANVAS_SIZE + 20, 270);
+    //     label_input.set_buffer(fltk::text::TextBuffer::default());
+    //     label_input.buffer().unwrap().set_text("0");
+
+    //     let mut instr = TextDisplay::default()
+    //         .with_size(260, 150)
+    //         .with_pos(CANVAS_SIZE + 20, 320);
+    //     let mut instr_buf = fltk::text::TextBuffer::default();
+    //     instr_buf.set_text(
+    //         "Instructions:\n1. Draw digit on canvas\n2. Click Recognize\n3. Set label (0-9)\n4. Click Save Image",
+    //     );
+    //     instr.set_buffer(instr_buf);
+
+    //     wind.end();
+    //     wind.show();
+
+    //     const FC1_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc1_weight.bin");
+    //     const FC2_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc2_weight.bin");
+    //     const FC3_WEIGHT_DATA: &[u8] = include_bytes!("../binarys/fc3_weight.bin");
+
+    //     const FC1_PARSED: ([[i8; 784]; 256], f32) =
+    //         parse_weight_binary_const::<256, 784>(FC1_WEIGHT_DATA);
+    //     const FC2_PARSED: ([[i8; 256]; 128], f32) =
+    //         parse_weight_binary_const::<128, 256>(FC2_WEIGHT_DATA);
+    //     const FC3_PARSED: ([[i8; 128]; 10], f32) =
+    //         parse_weight_binary_const::<10, 128>(FC3_WEIGHT_DATA);
+
+    //     let (fc1_weights, fc1_scale) = FC1_PARSED;
+    //     let (fc2_weights, fc2_scale) = FC2_PARSED;
+    //     let (fc3_weights, fc3_scale) = FC3_PARSED;
+
+    //     let fc1_scale_q16 = scale_to_q16!(fc1_scale);
+    //     let fc2_scale_q16 = scale_to_q16!(fc2_scale);
+    //     let fc3_scale_q16 = scale_to_q16!(fc3_scale);
+
+    //     println!("MNIST model loaded!");
+
+    //     let pixel_buffer = Rc::new(RefCell::new(vec![0u8; GRID_WIDTH * GRID_HEIGHT]));
+    //     let drawing = Rc::new(RefCell::new(false));
+
+    //     // Drawing callback
+    //     let pb_draw = pixel_buffer.clone();
+    //     canvas.draw({
+    //         let pb = pb_draw.clone();
+    //         move |_| {
+    //             draw::set_draw_color(fltk::enums::Color::White);
+    //             draw::draw_rectf(10, 10, CANVAS_SIZE, CANVAS_SIZE);
+
+    //             let pixels = pb.borrow();
+    //             for y in 0..GRID_HEIGHT {
+    //                 for x in 0..GRID_WIDTH {
+    //                     let pixel = pixels[y * GRID_WIDTH + x];
+    //                     let gray = 255u32.saturating_sub(pixel as u32) as u8;
+    //                     draw::set_draw_color(fltk::enums::Color::from_rgb(gray, gray, gray));
+    //                     draw::draw_rectf(
+    //                         10 + (x as i32 * PIXEL_SIZE),
+    //                         10 + (y as i32 * PIXEL_SIZE),
+    //                         PIXEL_SIZE,
+    //                         PIXEL_SIZE,
+    //                     );
+
+    //                     draw::set_draw_color(fltk::enums::Color::Light1);
+    //                     draw::draw_rect(
+    //                         10 + (x as i32 * PIXEL_SIZE),
+    //                         10 + (y as i32 * PIXEL_SIZE),
+    //                         PIXEL_SIZE,
+    //                         PIXEL_SIZE,
+    //                     );
+    //                 }
+    //             }
+    //         }
+    //     });
+
+    //     // Mouse event handling
+    //     let pb_handle = pixel_buffer.clone();
+    //     let dr_handle = drawing.clone();
+    //     canvas.handle({
+    //         let pb = pb_handle.clone();
+    //         let dr = dr_handle.clone();
+    //         move |w, ev| match ev {
+    //             fltk::enums::Event::Push => {
+    //                 *dr.borrow_mut() = true;
+    //                 true
+    //             }
+    //             fltk::enums::Event::Released => {
+    //                 *dr.borrow_mut() = false;
+    //                 true
+    //             }
+    //             fltk::enums::Event::Drag => {
+    //                 if *dr.borrow() {
+    //                     let (mx, my) = app::event_coords();
+    //                     let x = ((mx - 10) / PIXEL_SIZE) as usize;
+    //                     let y = ((my - 10) / PIXEL_SIZE) as usize;
+
+    //                     if x < GRID_WIDTH && y < GRID_HEIGHT {
+    //                         let mut pixels = pb.borrow_mut();
+    //                         // Draw with brush (3x3 area)
+    //                         for dy in -1..=1 {
+    //                             for dx in -1..=1 {
+    //                                 let nx = (x as i32 + dx) as usize;
+    //                                 let ny = (y as i32 + dy) as usize;
+    //                                 if nx < GRID_WIDTH && ny < GRID_HEIGHT {
+    //                                     let idx = ny * GRID_WIDTH + nx;
+    //                                     let dist_sq = (dx * dx + dy * dy) as f32;
+    //                                     let intensity =
+    //                                         ((180.0 * (1.0 - dist_sq / 2.0)).max(0.0)) as u8;
+    //                                     pixels[idx] = pixels[idx].saturating_add(intensity);
+    //                                 }
+    //                             }
+    //                         }
+    //                         drop(pixels);
+    //                         w.redraw();
+    //                     }
+    //                 }
+    //                 true
+    //             }
+    //             _ => false,
+    //         }
+    //     });
+
+    //     let pb_rec = pixel_buffer.clone();
+    //     recognize_btn.set_callback({
+    //         let result_box = result_box.clone();
+    //         move |_| {
+    //             let pixels = pb_rec.borrow().clone();
+    //             let prediction = mnist_inference_pure_int8(
+    //                 &fc1_weights,
+    //                 &fc2_weights,
+    //                 &fc3_weights,
+    //                 &pixels,
+    //                 fc1_scale_q16,
+    //                 fc2_scale_q16,
+    //                 fc3_scale_q16,
+    //             );
+
+    //             let mut buf = result_box.buffer().unwrap();
+    //             buf.set_text(&format!(
+    //                 "Predicted Digit:\n\n    {}\n\nConfident!",
+    //                 prediction
+    //             ));
+    //         }
+    //     });
+
+    //     let pb_clr = pixel_buffer.clone();
+    //     clear_btn.set_callback({
+    //         let mut canvas = canvas.clone();
+    //         move |_| {
+    //             let mut pixels = pb_clr.borrow_mut();
+    //             for p in pixels.iter_mut() {
+    //                 *p = 0;
+    //             }
+    //             drop(pixels);
+    //             canvas.redraw();
+    //         }
+    //     });
+
+    //     let pb_save = pixel_buffer.clone();
+    //     save_btn.set_callback({
+    //         let label_input = label_input.clone();
+    //         move |_| {
+    //             let label_text = label_input.buffer().unwrap().text();
+    //             let label = label_text.trim().parse::<u8>().unwrap_or(0);
+
+    //             let pixels = pb_save.borrow().clone();
+    //             save_mnist_image(&pixels, label);
+
+    //             let mut buf = label_input.buffer().unwrap();
+    //             buf.set_text("Saved!");
+    //         }
+    //     });
+
+    //     app.run().unwrap();
+    // }
+
+    // fn save_mnist_image(pixels: &[u8], label: u8) {
+    //     use std::fs::{create_dir_all, File};
+    //     use std::io::Write;
+    //     use std::path::Path;
+
+    //     let _ = create_dir_all("test_images");
+
+    //     let mut index = 0;
+    //     loop {
+    //         let bin_path = format!("test_images/saved_image_{:05}.bin", index);
+    //         let txt_path = format!("test_images/saved_image_{:05}.txt", index);
+
+    //         if !Path::new(&bin_path).exists() && !Path::new(&txt_path).exists() {
+    //             let mut bin_data = vec![0u8; pixels.len() + 9];
+
+    //             bin_data[0..4].copy_from_slice(&(28u32).to_le_bytes());
+    //             bin_data[4..8].copy_from_slice(&(28u32).to_le_bytes());
+    //             bin_data[8] = label;
+    //             bin_data[9..].copy_from_slice(pixels);
+
+    //             if let Ok(mut file) = File::create(&bin_path) {
+    //                 let _ = file.write_all(&bin_data);
+    //                 println!("Saved binary: {}", bin_path);
+    //             }
+
+    //             let mut txt_content = format!(
+    //                 "Image Index: {}\nTrue Label: {}\nImage Data (28x28):\n",
+    //                 index, label
+    //             );
+
+    //             for y in 0..28 {
+    //                 for x in 0..28 {
+    //                     let pixel = pixels[y * 28 + x];
+    //                     txt_content.push_str(&format!("{:3} ", pixel));
+    //                 }
+    //                 txt_content.push('\n');
+    //             }
+
+    //             if let Ok(mut file) = File::create(&txt_path) {
+    //                 let _ = file.write_all(txt_content.as_bytes());
+    //                 println!("Saved text: {}", txt_path);
+    //             }
+
+    //             break;
+    //         }
+    //         index += 1;
+    //     }
+    // }
 }

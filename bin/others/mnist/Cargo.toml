@@ -16,5 +16,5 @@ embedded-alloc = { workspace = true }
 
 [dev-dependencies]
 fltk = "1.4"
-gpui = "0.2.2"
-gpui-component = "0.4.1"
+egui = "0.33.2"
+eframe = "0.33.2"
