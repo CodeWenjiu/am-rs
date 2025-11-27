@@ -73,7 +73,9 @@ mod tests {
         texture: Option<egui::TextureHandle>,
         pixels_dirty: bool,
         brush_radius: f32,
-        recognized_digit: u8,
+        recognized_digit: usize,
+
+        infer: Inference,
     }
 
     impl Default for MnistAPP {
@@ -84,6 +86,8 @@ mod tests {
                 pixels_dirty: true,
                 brush_radius: 1.5,
                 recognized_digit: 0,
+
+                infer: Inference::new(),
             }
         }
     }
@@ -219,14 +223,8 @@ mod tests {
             self.recognized_digit = self.recognize();
         }
 
-        fn recognize(&self) -> u8 {
-            if self.pixels.iter().all(|&p| p == 0) {
-                return 0; // Return 0 for an empty canvas.
-            }
-
-            // In a real application, you would pass `&self.pixels` to a trained model.
-            // For now, it's just a dummy function.
-            0
+        fn recognize(&self) -> usize {
+            self.infer.mnist_inference_pure_int8(&self.pixels)
         }
     }
 
