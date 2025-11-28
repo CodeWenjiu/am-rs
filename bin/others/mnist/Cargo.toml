@@ -18,3 +18,4 @@ embedded-alloc = { workspace = true }
 fltk = "1.4"
 egui = "0.33.2"
 eframe = "0.33.2"
+winit = "0.30.12"
