@@ -22,6 +22,19 @@
           inherit system;
           overlays = [ (import rust-overlay) ];
         };
+        dlopenLibraries = with pkgs; [
+          libxkbcommon
+
+          # GPU backend
+          vulkan-loader
+          # libGL
+
+          # Window system
+          wayland
+          # xorg.libX11
+          # xorg.libXcursor
+          # xorg.libXi
+        ];
       in
       {
         devShells.default = pkgs.mkShell {
@@ -51,7 +64,11 @@
             # scripts dependencies
             nushell
             just
+
+            # GUI
+
           ];
+          env.RUSTFLAGS = "-C link-arg=-Wl,-rpath,${pkgs.lib.makeLibraryPath dlopenLibraries}";
         };
       }
     );

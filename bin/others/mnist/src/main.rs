@@ -61,6 +61,13 @@ mod tests {
                 builder.with_any_thread(true);
             }));
         }
+        #[cfg(target_os = "linux")]
+        {
+            use winit::platform::wayland::EventLoopBuilderExtWayland;
+            options.event_loop_builder = Some(Box::new(|builder| {
+                builder.with_any_thread(true);
+            }));
+        }
 
         eframe::run_native(
             "Test App",
