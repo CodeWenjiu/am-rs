@@ -31,6 +31,10 @@ members = [
 embedded-hal = "1.0.0"
 embedded-alloc = "0.6"
 
+egui = "0.33.2"
+eframe = "0.33.2"
+winit = "0.30.12"
+
 [profile.dev]
 panic = "abort"
 

@@ -634,21 +634,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cmake"
-version = "0.1.54"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7caa3f9de89ddbe2c607f4101924c5abec803763ae9534e4f4d7d8f84aa81f0"
-dependencies = [
- "cc",
-]
-
-[[package]]
-name = "cmk"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fd5de2a10e31b3ec3e8d75e7ccf8281ab3ee55de68f7ab6ffa9e21be8d82f22"
-
-[[package]]
 name = "codespan-reporting"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -767,15 +752,6 @@ name = "critical-section"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "790eea4361631c5e7d22598ecd5723ff611904e3344ce8720784c93e3d83d40b"
-
-[[package]]
-name = "crossbeam-channel"
-version = "0.5.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82b8f8f868b36967f9606790d1903570de9ceaf870a7bf9fbbd3016d636a2cb2"
-dependencies = [
- "crossbeam-utils",
-]
 
 [[package]]
 name = "crossbeam-queue"
@@ -1182,30 +1158,6 @@ checksum = "bfe33edd8e85a12a67454e37f8c75e730830d83e313556ab9ebf9ee7fbeb3bfb"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
-]
-
-[[package]]
-name = "fltk"
-version = "1.5.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ef591509a695d1f6ae5a1ff2b50bf98fb96a82c2d1f2a97b9103b762583c915"
-dependencies = [
- "bitflags 2.10.0",
- "crossbeam-channel",
- "fltk-sys",
- "minipaste",
- "once_cell",
- "ttf-parser",
-]
-
-[[package]]
-name = "fltk-sys"
-version = "1.5.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d09bcc449403e8ef87799dc5c5a1e31469ad5affd1bcaaca3a15810aae4ff6f"
-dependencies = [
- "cmake",
- "cmk",
 ]
 
 [[package]]
@@ -1879,15 +1831,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "minipaste"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bbcafc6544efab7decec8e8e63d6e7cbaac0a699a4adead308a80f9c302d6ae"
-dependencies = [
- "proc-macro2",
-]
-
-[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1906,7 +1849,6 @@ dependencies = [
  "egui",
  "embedded-alloc",
  "embedded-hal",
- "fltk",
  "macros",
  "runtime",
  "winit",

@@ -15,7 +15,6 @@ embedded-hal = { workspace = true }
 embedded-alloc = { workspace = true }
 
 [dev-dependencies]
-fltk = "1.4"
-egui = "0.33.2"
-eframe = "0.33.2"
-winit = "0.30.12"
+egui = { workspace = true }
+eframe = { workspace = true }
+winit = { workspace = true }

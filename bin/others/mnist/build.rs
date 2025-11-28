@@ -10,6 +10,7 @@ fn main() {
     let dest_path = Path::new(&out_dir).join("embedded_images.rs");
 
     let test_images_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("./test_images");
+    println!("cargo:rerun-if-changed={}", test_images_dir.display());
 
     // Get all .bin files from the test images directory
     let mut bin_files = Vec::new();
