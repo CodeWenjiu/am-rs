@@ -22,23 +22,30 @@
           inherit system;
           overlays = [ (import rust-overlay) ];
         };
-        dlopenLibraries = with pkgs; [
-          libxkbcommon
 
-          # GPU backend
-          vulkan-loader
-          # libGL
-
-          # Window system
+        guidymlib = with pkgs; [
+          # GUI
           wayland
-          # xorg.libX11
-          # xorg.libXcursor
-          # xorg.libXi
+          gtk3
+
+          libxkbcommon
+          libGL
+          vulkan-loader
+          vulkan-headers
+          vulkan-tools
+
+          xorg.libXcursor
+          xorg.libXrandr
+          xorg.libXi
+          xorg.libX11
+          xorg.libxcb
         ];
       in
       {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
+            pkg-config
+
             # rust toolchain
             (rust-bin.stable.latest.default.override {
               extensions = [
@@ -65,10 +72,9 @@
             nushell
             just
 
-            # GUI
-
+            guidymlib
           ];
-          env.RUSTFLAGS = "-C link-arg=-Wl,-rpath,${pkgs.lib.makeLibraryPath dlopenLibraries}";
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath guidymlib}";
         };
       }
     );

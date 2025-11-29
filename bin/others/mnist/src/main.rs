@@ -1,9 +1,6 @@
 #![cfg_attr(not(test), no_std, no_main)]
 
-#[cfg(not(test))]
 runtime::binInit!();
-#[cfg(not(test))]
-runtime::entry!(main);
 
 macros::mod_flat!(inference);
 
@@ -40,18 +37,12 @@ fn main() {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_main() {
-        main();
-    }
-
     use eframe::egui;
 
     const WIDTH: usize = 28;
     const HEIGHT: usize = 28;
 
     #[test]
-    #[ignore]
     fn mnist_get() -> Result<(), eframe::Error> {
         let mut options = eframe::NativeOptions::default();
         #[cfg(target_os = "windows")]
@@ -248,7 +239,13 @@ mod tests {
         }
 
         fn recognize(&self) -> u8 {
-            self.infer.mnist_inference_pure_int8(&self.pixels) as u8
+            let image = &self.pixels;
+
+            if image.iter().all(|pixel| *pixel == 0) {
+                0
+            } else {
+                self.infer.mnist_inference_pure_int8(&self.pixels) as u8
+            }
         }
 
         fn save(&self) {

@@ -2,10 +2,7 @@
 
 use std::io::stdin;
 
-#[cfg(not(test))]
 runtime::binInit!();
-#[cfg(not(test))]
-runtime::entry!(main);
 
 fn main() {
     println!("=== AM-RS Stdin Test ===\n");

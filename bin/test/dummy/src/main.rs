@@ -1,8 +1,5 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(test), no_std, no_main)]
 
 runtime::binInit!();
-
-runtime::entry!(main);
 
 fn main() {}

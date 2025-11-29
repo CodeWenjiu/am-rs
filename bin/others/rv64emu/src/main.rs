@@ -3,8 +3,6 @@
 
 runtime::binInit!();
 
-runtime::entry!(main);
-
 use rv64emu::{
     rv64core::{
         bus::Bus,

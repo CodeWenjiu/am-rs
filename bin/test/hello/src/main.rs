@@ -1,9 +1,6 @@
 #![cfg_attr(not(test), no_std, no_main)]
 
-#[cfg(not(test))]
 runtime::binInit!();
-#[cfg(not(test))]
-runtime::entry!(main);
 
 fn main() {
     println!("Hello_world!");
