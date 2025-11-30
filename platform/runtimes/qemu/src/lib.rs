@@ -1,25 +1,30 @@
 #![no_std]
 
-// Platform-specific modules
 pub mod critical_section;
 pub mod exit;
 pub mod startup;
 pub mod stdio;
 
-pub use common::println;
+#[unsafe(export_name = "__start__")]
+#[unsafe(link_section = ".text.__start__")]
+pub unsafe extern "C" fn __start__() -> ! {
+    unsafe extern "Rust" {
+        fn main() -> !;
+    }
+    unsafe {
+        main();
+    }
+}
 
-// Generate common startup code
-// Platform-specific _start is in startup.rs
-common::common_startup!();
-
-// Platform-specific panic handler
 #[cfg(not(test))]
-use core::panic::PanicInfo;
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
+mod panic_impl {
     use crate::exit::platform_exit;
-    println!("Panic: {}", info);
-    platform_exit(1);
+    use core::panic::PanicInfo;
+
+    #[panic_handler]
+    fn panic(_info: &PanicInfo) -> ! {
+        // Can't print here, as it may cause another panic.
+        // Just exit with a non-zero status code.
+        platform_exit(1);
+    }
 }
