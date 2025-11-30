@@ -19,7 +19,7 @@ pub unsafe extern "C" fn _start() -> ! {
         la sp, _stack_top
 
         # Jump to common startup code
-        j __start__
+        j isa_init
         "
     )
 }

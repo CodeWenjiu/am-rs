@@ -6,25 +6,19 @@ pub mod exit;
 pub mod startup;
 pub mod stdio;
 
-#[unsafe(export_name = "__start__")]
-#[unsafe(link_section = ".text.__start__")]
-pub unsafe extern "C" fn __start__() -> ! {
+#[unsafe(export_name = "isa_init")]
+#[unsafe(link_section = ".text.isa_init")]
+pub unsafe extern "C" fn isa_init() -> ! {
     unsafe extern "Rust" {
         fn main() -> !;
     }
+
     unsafe {
+        core::arch::asm!(
+            "li x10, 0x200",
+            "csrs mstatus, x10",
+            options(nomem, nostack, preserves_flags)
+        );
         main();
     }
-}
-
-// Platform-specific panic handler
-#[cfg(not(test))]
-use core::panic::PanicInfo;
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    use crate::exit::platform_exit;
-    // println!("Panic: {}", info);
-    platform_exit(1);
 }

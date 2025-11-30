@@ -77,8 +77,8 @@ macro_rules! binInit {
 #[macro_export]
 macro_rules! entry {
     ($path:path) => {
-        #[unsafe(export_name = "main")]
-        pub unsafe fn __main() -> ! {
+        #[unsafe(export_name = "user_entry")]
+        pub unsafe fn __user_entry() -> ! {
             let f: fn() = $path;
 
             $crate::heap_init!();
