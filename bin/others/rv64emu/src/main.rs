@@ -14,7 +14,7 @@ use rv64emu::{
     tools::rc_refcell_new,
 };
 
-use std::{io::stdin, rc::Rc};
+use std::rc::Rc;
 
 // Import modules
 mod bin_file;
@@ -170,12 +170,12 @@ fn main() {
             print!("{c}");
         }
 
-        // Handle UART input (console -> RX FIFO)
-        // Use try_getc to check for input without blocking
-        if let Some(input_char) = stdin().try_getc() {
-            // Push received character to emulated UART's RX FIFO
-            uart_devices.rx_fifo.push(input_char);
-        }
+        // // Handle UART input (console -> RX FIFO)
+        // // Use try_getc to check for input without blocking
+        // if let Some(input_char) = stdin().try_getc() {
+        //     // Push received character to emulated UART's RX FIFO
+        //     uart_devices.rx_fifo.push(input_char);
+        // }
 
         // Check if simulation should stop (you can add conditions here)
         // For now, it runs indefinitely

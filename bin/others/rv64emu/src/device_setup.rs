@@ -5,9 +5,11 @@
 #[cfg(not(test))]
 runtime::libInit!();
 
+extern crate alloc;
 use alloc::sync::Arc;
 use core::cell::RefCell;
 use crossbeam_queue::SegQueue;
+use std::rc::Rc;
 
 use rv64emu::{
     device::{
@@ -24,7 +26,7 @@ pub struct UartDevices {
     /// Transmit FIFO - data from emulated system to host
     pub tx_fifo: Arc<SegQueue<u8>>,
     /// Receive FIFO - data from host to emulated system
-    pub rx_fifo: Arc<SegQueue<u8>>,
+    pub _rx_fifo: Arc<SegQueue<u8>>,
 }
 
 /// Setup main memory (DRAM) on the bus
@@ -106,7 +108,7 @@ pub fn setup_uart_devices(
 
     UartDevices {
         tx_fifo: uart_tx_fifo,
-        rx_fifo: uart_rx_fifo,
+        _rx_fifo: uart_rx_fifo,
     }
 }
 

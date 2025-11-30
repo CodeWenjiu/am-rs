@@ -9,6 +9,7 @@ pub use qemu_runtime::*;
 #[cfg(feature = "spike")]
 pub use spike_runtime::*;
 
+macros::mod_pub!(io);
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {
@@ -109,7 +110,18 @@ macro_rules! heap_init {
     };
 }
 
-macros::mod_pub!(io);
+#[cfg(all(not(test), any(feature = "nemu", feature = "qemu", feature = "spike")))]
+mod panic_handler {
+    use crate::{exit::platform_exit, println};
+    use core::panic::PanicInfo;
+
+    #[panic_handler]
+    fn panic(info: &PanicInfo) -> ! {
+        println!("Panic: {}", info);
+        platform_exit(1)
+    }
+}
+
 macros::mod_flat!(pub_macro);
 extern crate alloc;
 pub use alloc::rc;
