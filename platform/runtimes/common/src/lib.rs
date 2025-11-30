@@ -23,20 +23,15 @@ macro_rules! libInit {
 #[macro_export]
 macro_rules! binInit {
     () => {
-        #[cfg(not(test))]
-        mod on_not_test {
-            // Import platform-specific prelude
-            $crate::preclude!();
+        // Import platform-specific prelude
+        $crate::preclude!();
 
-            // Setup global allocator
-            use embedded_alloc::LlffHeap;
-            #[global_allocator]
-            static ALLOCATOR: LlffHeap = LlffHeap::empty();
+        // Setup global allocator
+        use embedded_alloc::LlffHeap;
+        #[global_allocator]
+        static ALLOCATOR: LlffHeap = LlffHeap::empty();
 
-            $crate::entry!(main);
-        }
-
-        $crate::addtest!(main);
+        $crate::entry!(main);
     };
 }
 
@@ -88,14 +83,11 @@ macro_rules! entry {
 
 #[macro_export]
 macro_rules! addtest {
-    ($path:path) => {
-        #[cfg(test)]
+    () => {
         mod on_test {
-            use super::{$path as test_fn};
-
             #[test]
             fn main() {
-                test_fn();
+                super::main();
             }
         }
     };

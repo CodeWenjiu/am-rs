@@ -18,21 +18,21 @@
     utils.lib.eachDefaultSystem (
       system:
       let
+        overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ (import rust-overlay) ];
+          inherit system overlays;
         };
 
         guidymlib = with pkgs; [
-          # GUI
+          pkg-config
           wayland
-          gtk3
 
           libxkbcommon
           libGL
           vulkan-loader
           vulkan-headers
           vulkan-tools
+          gtk3
 
           xorg.libXcursor
           xorg.libXrandr
@@ -40,13 +40,10 @@
           xorg.libX11
           xorg.libxcb
         ];
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            pkg-config
 
-            # rust toolchain
+        DevEnv = pkgs.symlinkJoin {
+          name = "dev-env";
+          paths = with pkgs; [
             (rust-bin.stable.latest.default.override {
               extensions = [
                 "rust-src"
@@ -72,8 +69,14 @@
             nushell
             just
 
+            # GUI
             guidymlib
           ];
+        };
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          packages = [ DevEnv ];
           LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath guidymlib}";
         };
       }

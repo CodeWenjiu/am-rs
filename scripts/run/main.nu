@@ -35,6 +35,12 @@ def "main run" [bin, arch] {
     pla_run $bin $arch false
 }
 
+def "main native run" [bin, target] {
+    log info $"Running ($bin) on native"
+
+    cargo test -p $bin $target -- --nocapture
+}
+
 def is_test_involved [bin] {
     let test_matadata = get_bin_matadata $bin | get test?
     ($test_matadata != null and $test_matadata.involved == true)

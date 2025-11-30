@@ -1,8 +1,11 @@
 #![cfg_attr(not(test), no_std, no_main)]
 
-use std::io::stdin;
-
+#[cfg(not(test))]
 runtime::binInit!();
+#[cfg(test)]
+runtime::addtest!();
+
+use std::io::stdin;
 
 fn main() {
     println!("=== AM-RS Stdin Test ===\n");

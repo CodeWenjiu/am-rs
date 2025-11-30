@@ -1,7 +1,9 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(test), no_std, no_main)]
 
+#[cfg(not(test))]
 runtime::binInit!();
+#[cfg(test)]
+runtime::addtest!();
 
 use rv64emu::{
     rv64core::{
@@ -12,7 +14,7 @@ use rv64emu::{
     tools::rc_refcell_new,
 };
 
-use std::io::stdin;
+use std::{io::stdin, rc::Rc};
 
 // Import modules
 mod bin_file;

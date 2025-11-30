@@ -51,6 +51,10 @@ disasm BIN="_ALL" ARCH="_ALL":
 run BIN ARCH:
     @nu scripts/run/main.nu run {{ BIN }} {{ ARCH }}
 
+# Run the program natively
+native-run BIN TARGET="main":
+    @nu scripts/run/main.nu native run {{ BIN }} {{ TARGET }}
+
 # Run the program in batch mode
 test BIN="_ALL" ARCH="_ALL":
     @nu scripts/run/main.nu test {{ BIN }} {{ ARCH }}

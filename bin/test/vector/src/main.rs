@@ -1,8 +1,9 @@
-#![cfg_attr(not(test), no_std)]
-#![cfg_attr(not(test), no_main)]
-#![allow(unstable_features)]
+#![cfg_attr(not(test), no_std, no_main)]
 
+#[cfg(not(test))]
 runtime::binInit!();
+#[cfg(test)]
+runtime::addtest!();
 
 fn vector_add(a: &[u32], b: &[u32], c: &mut [u32]) {
     for i in 0..a.len() {

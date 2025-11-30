@@ -2,8 +2,10 @@
 //!
 //! This module contains helper functions for setting up emulated devices
 //! on the system bus, keeping the main function clean and focused.
+#[cfg(not(test))]
+runtime::libInit!();
 
-use alloc::{boxed::Box, rc::Rc, sync::Arc, vec::Vec};
+use alloc::sync::Arc;
 use core::cell::RefCell;
 use crossbeam_queue::SegQueue;
 
