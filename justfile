@@ -59,6 +59,10 @@ native-run BIN TARGET="main":
 test BIN="_ALL" ARCH="_ALL":
     @nu scripts/run/main.nu test {{ BIN }} {{ ARCH }}
 
-# Clean build artifacts
+# Clean disassembly artifacts
 clean:
+    @rm -rf ./target/disasm
+
+# Clean build artifacts
+clean-all:
     @cargo clean

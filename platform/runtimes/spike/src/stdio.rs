@@ -1,77 +1,73 @@
-// HTIF host interface symbols (defined in linker script)
-#[cfg(any(target_arch = "riscv32"))]
-unsafe extern "C" {
-    static mut tohost: u64;
-    static mut fromhost: u64;
-}
+//! QEMU platform stdio implementation
+//!
+//! This module provides character I/O functions for the QEMU RISC-V virt machine.
+//! It uses the 16550A UART controller at address 0x10000000.
 
+/// UART base address (16550A compatible UART on QEMU virt machine)
+const UART_BASE: usize = 0x10000000;
+
+/// UART Line Status Register offset
+const UART_LSR: usize = UART_BASE + 5;
+
+/// UART Line Status Register bits
+const UART_LSR_THRE: u8 = 0x20; // Transmit Holding Register Empty
+const UART_LSR_DR: u8 = 0x01; // Data Ready (receive buffer has data)
+
+/// Write a character to UART
+///
+/// This function waits until the transmit holding register is empty,
+/// then writes the character to the UART.
+///
+/// # Arguments
+/// * `ch` - Character byte to transmit
 #[unsafe(no_mangle)]
 pub fn putc(ch: u8) {
-    // Bare-metal Spike (HTIF) console output:
-    // HTIF command: device=1 (console), cmd=1 (write), data=ch
-    // tohost = (1 << 56) | (1 << 48) | ch
-    #[cfg(any(target_arch = "riscv32"))]
     unsafe {
-        // Wait until previous host transaction completes (host clears tohost to 0)
-        while core::ptr::read_volatile(&raw const tohost) != 0 {}
-
-        let cmd = (1u64 << 56) | (1u64 << 48) | (ch as u64);
-        core::ptr::write_volatile(&raw mut tohost, cmd);
-
-        // Wait for command to complete
-        while core::ptr::read_volatile(&raw const tohost) != 0 {}
-
-        // Read fromhost to acknowledge
-        let _ = core::ptr::read_volatile(&raw const fromhost);
-    }
-
-    // On non-RISC-V (e.g. analysis on host), do nothing.
-    #[cfg(not(any(target_arch = "riscv32", target_arch = "riscv64")))]
-    {
-        let _ = ch;
+        // Wait until transmit holding register is empty
+        while (core::ptr::read_volatile(UART_LSR as *const u8) & UART_LSR_THRE) == 0 {}
+        // Write character to UART data register
+        core::ptr::write_volatile(UART_BASE as *mut u8, ch);
     }
 }
 
+/// Read a character from UART (blocking)
+///
+/// This function waits until data is available in the receive buffer,
+/// then reads and returns the character.
+///
+/// # Returns
+/// * The received character byte
+///
+/// # Safety
+/// This function blocks indefinitely if no data arrives.
 #[unsafe(no_mangle)]
 pub fn getc() -> u8 {
-    // Bare-metal Spike (HTIF) console input:
-    // HTIF command: device=1 (console), cmd=0 (read), data=0
-    // tohost = (1 << 56) | (0 << 48) | 0
-    #[cfg(any(target_arch = "riscv32"))]
     unsafe {
-        // Wait until previous host transaction completes (host clears tohost to 0)
-        while core::ptr::read_volatile(&raw const tohost) != 0 {}
-
-        let cmd = (1u64 << 56) | (0u64 << 48) | 0u64;
-        core::ptr::write_volatile(&raw mut tohost, cmd);
-
-        // Wait for command to complete
-        while core::ptr::read_volatile(&raw const tohost) != 0 {}
-
-        // Read the character from fromhost
-        let result = core::ptr::read_volatile(&raw const fromhost);
-        (result & 0xff) as u8
-    }
-
-    // On non-RISC-V (e.g. analysis on host), do nothing.
-    #[cfg(not(any(target_arch = "riscv32", target_arch = "riscv64")))]
-    {
-        0
+        // Wait until data is ready (receive buffer has data)
+        while (core::ptr::read_volatile(UART_LSR as *const u8) & UART_LSR_DR) == 0 {}
+        // Read character from UART data register
+        core::ptr::read_volatile(UART_BASE as *const u8)
     }
 }
 
+/// Try to read a character from UART (non-blocking)
+///
+/// This function checks if data is available and returns it if so,
+/// otherwise returns None immediately without blocking.
+///
+/// # Returns
+/// * `Some(ch)` - Character byte if data is available
+/// * `None` - No data available
 #[unsafe(no_mangle)]
 pub fn try_getc() -> Option<u8> {
-    // Spike HTIF does not support non-blocking input easily
-    // For simplicity, always return None
-    #[cfg(any(target_arch = "riscv32"))]
-    {
-        None
-    }
-
-    // On non-RISC-V (e.g. analysis on host), do nothing.
-    #[cfg(not(any(target_arch = "riscv32", target_arch = "riscv64")))]
-    {
-        None
+    unsafe {
+        // Check if data is ready
+        if (core::ptr::read_volatile(UART_LSR as *const u8) & UART_LSR_DR) != 0 {
+            // Data available, read it
+            Some(core::ptr::read_volatile(UART_BASE as *const u8))
+        } else {
+            // No data available
+            None
+        }
     }
 }

@@ -10,7 +10,7 @@ pub mod stdio;
 #[unsafe(link_section = ".text.isa_init")]
 pub unsafe extern "C" fn isa_init() -> ! {
     unsafe extern "Rust" {
-        fn main() -> !;
+        fn user_entry() -> !;
     }
 
     unsafe {
@@ -19,6 +19,6 @@ pub unsafe extern "C" fn isa_init() -> ! {
             "csrs mstatus, x10",
             options(nomem, nostack, preserves_flags)
         );
-        main();
+        user_entry();
     }
 }
